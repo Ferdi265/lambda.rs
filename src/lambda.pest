@@ -2,11 +2,11 @@ program = { NEWLINE* ~ assignment ~ (NEWLINE+ ~ assignment)* ~ NEWLINE* ~ EOI }
 
 assignment = { identifier ~ NEWLINE* ~ "=" ~ NEWLINE* ~ application }
 
-application = { expression+ }
+application = { (expression ~ (DROP ~ PUSH(NEWLINE))?)+ }
 expression = { lambda | parenthesis | identifier }
 
 lambda = { identifier ~ NEWLINE* ~ "->" ~ NEWLINE* ~ application }
-parenthesis = { NEWLINE* ~ "(" ~ NEWLINE* ~ application ~ NEWLINE* ~ ")" }
+parenthesis = { NEWLINE* ~ PUSH("(") ~ NEWLINE* ~ application ~ NEWLINE* ~ DROP ~ ")" }
 
 identifier = @{ (ASCII_ALPHANUMERIC | "_")+ }
 
