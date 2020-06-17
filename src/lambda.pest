@@ -10,7 +10,7 @@ parenthesis = { NEWLINE* ~ PUSH("(") ~ NEWLINE* ~ application ~ NEWLINE* ~ DROP 
 
 identifier = @{ (ASCII_ALPHANUMERIC | "_")+ }
 
-COMMENT = @{ "#" ~ (ASCII_WHITESPACE | ASCII_PRINTABLE)* ~ NEWLINE }
+COMMENT = _{ "#" ~ (ASCII_WHITESPACE | ASCII_PRINTABLE)* ~ NEWLINE }
 WHITESPACE = _{ ASCII_WHITESPACE }
 
 ASCII_WHITESPACE = { " " | "\t" }
