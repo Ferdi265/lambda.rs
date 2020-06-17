@@ -3,7 +3,7 @@ program = { assignment+ }
 assignment = { identifier ~ "=" ~ application ~ NEWLINE }
 
 application = { expression+ }
-expression = { lambda | parenthesis }
+expression = { lambda | parenthesis | identifier }
 
 lambda = { identifier ~ "->" ~ application }
 parenthesis = { "(" ~ application ~ ")" }
