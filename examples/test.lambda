@@ -69,5 +69,5 @@ map = f -> list -> (empty list) nil (prepend (f (first list)) (map f (rest list)
 
 # accumulate a result by applying a function to successive list elements
 # left-associative and right-associative variants
-foldl = f -> initial -> list -> (empty list) initial (reduce f (f initial (first list)) (rest list))
-foldr = f -> initial -> list -> (empty list) initial (f (first list) (reduce f initial (rest list)))
+foldl = f -> initial -> list -> (empty list) initial (foldl f (f initial (first list)) (rest list))
+foldr = f -> initial -> list -> (empty list) initial (f (first list) (foldr f initial (rest list)))
