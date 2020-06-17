@@ -124,6 +124,26 @@ mod test {
     }
 
     #[test]
+    fn test_expression() {
+        assert_eq!(
+            LambdaParser::parse_expression("e -> (a -> a) (c -> c) e"),
+            Ok(Expression::Lambda(Lambda(Identifier("e"), Application(vec![
+                Expression::Parenthesis(Application(vec![
+                    Expression::Lambda(Lambda(Identifier("a"), Application(vec![
+                        Expression::Identifier(Identifier("a"))
+                    ])))
+                ])),
+                Expression::Parenthesis(Application(vec![
+                    Expression::Lambda(Lambda(Identifier("c"), Application(vec![
+                        Expression::Identifier(Identifier("c"))
+                    ])))
+                ])),
+                Expression::Identifier(Identifier("e"))
+            ]))))
+        );
+    }
+
+    #[test]
     fn test_application() {
         assert_eq!(
             LambdaParser::parse_application("a b"),
@@ -168,6 +188,30 @@ mod test {
                     Expression::Identifier(Identifier("c"))
                 ])))
             ]))
+        );
+    }
+
+    #[test]
+    fn test_assignment() {
+        assert_eq!(
+            LambdaParser::parse_assignment("ident = a -> a"),
+            Ok(Assignment(Identifier("ident"), Application(vec![
+                Expression::Lambda(Lambda(Identifier("a"), Application(vec![
+                    Expression::Identifier(Identifier("a"))
+                ])))
+            ])))
+        );
+        assert_eq!(
+            LambdaParser::parse_assignment("and = a -> b -> a b false"),
+            Ok(Assignment(Identifier("and"), Application(vec![
+                Expression::Lambda(Lambda(Identifier("a"), Application(vec![
+                    Expression::Lambda(Lambda(Identifier("b"), Application(vec![
+                        Expression::Identifier(Identifier("a")),
+                        Expression::Identifier(Identifier("b")),
+                        Expression::Identifier(Identifier("false"))
+                    ])))
+                ])))
+            ])))
         );
     }
 }
