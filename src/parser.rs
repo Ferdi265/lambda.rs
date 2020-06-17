@@ -186,9 +186,36 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_ident() {
-        let res = LambdaParser::parse(Rule::identifier, "map").unwrap();
+    fn test_identifier() {
+        assert_eq!(LambdaParser::parse_identifier("true"), Ok(Identifier("true")));
+        assert_eq!(LambdaParser::parse_identifier("1st"), Ok(Identifier("1st")));
+        assert_eq!(LambdaParser::parse_identifier("2nd"), Ok(Identifier("2nd")));
 
-        println!("{:?}", res);
+        assert!(LambdaParser::parse_identifier("+").is_err());
+        assert!(LambdaParser::parse_identifier("(").is_err());
+        assert!(LambdaParser::parse_identifier(")").is_err());
+    }
+
+    #[test]
+    fn test_lambda() {
+        assert_eq!(
+            LambdaParser::parse_lambda("a -> b"),
+            Ok(Lambda(Identifier("a"), Application(vec![Expression::Identifier(Identifier("b"))])))
+        );
+        assert_eq!(
+            LambdaParser::parse_lambda("a -> b -> c"),
+            Ok(Lambda(Identifier("a"), Application(vec![Expression::Lambda(
+                Lambda(Identifier("b"), Application(vec![Expression::Identifier(Identifier("c"))]))
+            )])))
+        );
+        assert_eq!(
+            LambdaParser::parse_lambda("a -> b c"),
+            Ok(Lambda(Identifier("a"), Application(vec![
+                Expression::Identifier(Identifier("b")),
+                Expression::Identifier(Identifier("c"))
+            ])))
+        );
+
+        assert!(LambdaParser::parse_lambda("(a -> b) -> c").is_err());
     }
 }
