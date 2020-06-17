@@ -1,0 +1,17 @@
+program = { assignment+ }
+
+assignment = { identifier ~ "=" ~ application ~ NEWLINE }
+
+application = { expression+ }
+expression = { lambda | parenthesis }
+
+lambda = { identifier ~ "->" ~ application }
+parenthesis = { "(" ~ application ~ ")" }
+
+identifier = @{ (ASCII_ALPHANUMERIC | "_")+ }
+
+COMMENT = @{ "#" ~ (ASCII_WHITESPACE | ASCII_PRINTABLE)* ~ NEWLINE }
+WHITESPACE = _{ ASCII_WHITESPACE | NEWLINE }
+
+ASCII_WHITESPACE = { " " | "\t" }
+ASCII_PRINTABLE = { '!'..'~' }

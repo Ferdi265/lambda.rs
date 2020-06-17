@@ -1,0 +1,73 @@
+# type lambda : arg -> res
+# res can be anything
+
+# identity lambda
+ident = a -> a
+
+
+# type bool : a -> b -> res
+# res is either a or b
+
+# the two possible bools
+true = a -> b -> a
+false = a -> b -> b
+
+# unary bool combinators
+not = a -> a false true
+always = a -> true
+never = a -> false
+
+# binary bool combinators
+and = a -> b -> a b false
+or = a -> b -> a true b
+xor = a -> b -> a (not b) b
+nand = a -> b -> not (and a b)
+nor = a -> b -> not (or a b)
+xnor = a -> b -> not (xor a b)
+
+
+# type tuple : bool -> res
+# container type, internally stores two values
+# returns the first one on true
+# returns the second one on false
+
+# creates a tuple containing a and b
+tuple = a -> b -> sel -> sel a b
+
+# select the first element of the tuple
+1st = tup -> tup true
+# select the second element of the tuple
+2nd = tup -> tup false
+
+
+# type list : ((first, empty), rest))
+# linked-list container type built from tuples
+
+# the empty list
+nil = tuple (tuple ident true) ident
+
+# prepends to a list
+prepend = a -> list -> tuple (tuple a false) list
+
+# checks if the list is empty
+empty = list -> 2nd (1st list)
+
+# get the first element of the list
+# returns the first element of the list
+# returns ident if the list is empty
+first = list -> 1st (1st list)
+
+# get the rest of the list
+# returns a new list of everything except the first element
+# returns an empty list (nil) if the list is empty
+rest = list -> (empty list) nil (2nd list)
+
+
+# apply a function to each element of a list
+# returns a new list with every element being the result of the function called with the old element
+map = f -> list -> (empty list) nil (prepend (f (first list)) (map f (rest list)))
+
+# accumulate a result by applying a function to successive list elements
+# left-associative and right-associative variants
+foldl = f -> initial -> list -> (empty list) initial (reduce f (f initial (first list)) (rest list))
+foldr = f -> initial -> list -> (empty list) initial (f (first list) (reduce f initial (rest list)))
