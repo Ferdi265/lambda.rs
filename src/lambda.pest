@@ -1,6 +1,7 @@
-program = { assignment+ ~ EOI }
+program = { assignment ~ (NEWLINE ~ assignment)* ~ program_end }
+program_end = _{ EOI }
 
-assignment = { identifier ~ "=" ~ application ~ NEWLINE }
+assignment = { identifier ~ "=" ~ application }
 
 application = { expression+ }
 expression = { lambda | parenthesis | identifier }
