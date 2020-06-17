@@ -81,10 +81,19 @@ fn is_numeric(name: &str) -> bool {
     }
 }
 
+fn is_underscore(name: &str) -> bool {
+    if let Some(c) = name.chars().next() {
+        c == '_'
+    } else {
+        false
+    }
+}
+
+
 impl CodegenTarget for JavaScript {
     fn generate_identifier<'i>(&self, ident: &Identifier<'i>) -> String {
-        if is_reserved(ident.0) || is_numeric(ident.0) {
-            format!("_${}", ident.0)
+        if is_reserved(ident.0) || is_numeric(ident.0) || is_underscore(ident.0) {
+            format!("_{}", ident.0)
         } else {
             ident.0.to_string()
         }
