@@ -32,6 +32,7 @@ impl FromStr for Target {
     fn from_str(target: &str) -> Result<Target, Self::Err> {
         match target {
             "javascript" | "js" => Ok(Target(Box::new(JavaScript))),
+            "python" | "py" => Ok(Target(Box::new(Python))),
             _ => Err("unsupported target")
         }
     }
