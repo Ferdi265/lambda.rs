@@ -1,4 +1,4 @@
-program = { assignment+ }
+program = { assignment+ ~ EOI }
 
 assignment = { identifier ~ "=" ~ application ~ NEWLINE }
 
