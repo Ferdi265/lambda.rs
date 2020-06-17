@@ -1,5 +1,4 @@
-program = { assignment ~ (NEWLINE ~ assignment)* ~ program_end }
-program_end = _{ EOI }
+program = { NEWLINE* ~ assignment ~ (NEWLINE+ ~ assignment)* ~ NEWLINE* ~ EOI }
 
 assignment = { identifier ~ "=" ~ application }
 
@@ -12,7 +11,7 @@ parenthesis = { "(" ~ application ~ ")" }
 identifier = @{ (ASCII_ALPHANUMERIC | "_")+ }
 
 COMMENT = @{ "#" ~ (ASCII_WHITESPACE | ASCII_PRINTABLE)* ~ NEWLINE }
-WHITESPACE = _{ ASCII_WHITESPACE | NEWLINE }
+WHITESPACE = _{ ASCII_WHITESPACE }
 
 ASCII_WHITESPACE = { " " | "\t" }
 ASCII_PRINTABLE = { '!'..'~' }
