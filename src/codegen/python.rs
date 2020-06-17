@@ -59,7 +59,6 @@ fn is_underscore(name: &str) -> bool {
     }
 }
 
-
 impl CodegenTarget for Python {
     fn generate_identifier<'i>(&self, ident: &Identifier<'i>) -> String {
         if is_reserved(ident.0) || is_numeric(ident.0) || is_underscore(ident.0) {
