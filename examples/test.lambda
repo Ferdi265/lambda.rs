@@ -60,14 +60,14 @@ first = list -> 1st (1st list)
 # get the rest of the list
 # returns a new list of everything except the first element
 # returns an empty list (nil) if the list is empty
-rest = list -> (empty list) nil (2nd list)
+rest = list -> empty list nil (2nd list)
 
 
 # apply a function to each element of a list
 # returns a new list with every element being the result of the function called with the old element
-map = f -> list -> (empty list) nil (prepend (f (first list)) (map f (rest list)))
+map = f -> list -> empty list (x -> nil) (x -> prepend (f (first list)) (map f (rest list))) ident
 
 # accumulate a result by applying a function to successive list elements
 # left-associative and right-associative variants
-foldl = f -> initial -> list -> (empty list) initial (foldl f (f initial (first list)) (rest list))
-foldr = f -> initial -> list -> (empty list) initial (f (first list) (foldr f initial (rest list)))
+foldl = f -> initial -> list -> empty list (x -> initial) (x -> foldl f (f initial (first list)) (rest list)) ident
+foldr = f -> initial -> list -> empty list (x -> initial) (x -> f (first list) (foldr f initial (rest list))) ident
