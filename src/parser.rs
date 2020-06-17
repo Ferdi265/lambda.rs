@@ -96,6 +96,34 @@ mod test {
     }
 
     #[test]
+    fn test_parenthesis() {
+        assert_eq!(
+            LambdaParser::parse_parenthesis("((a))"),
+            Ok(Application(vec![
+                Expression::Parenthesis(Application(vec![
+                    Expression::Identifier(Identifier("a"))
+                ]))
+            ]))
+        );
+        assert_eq!(
+            LambdaParser::parse_parenthesis("a (b c) ((d) e)"),
+            Ok(Application(vec![
+                Expression::Identifier(Identifier("a")),
+                Expression::Parenthesis(Application(vec![
+                    Expression::Identifier(Identifier("b")),
+                    Expression::Identifier(Identifier("c")),
+                ])),
+                Expression::Parenthesis(Application(vec![
+                    Expression::Parenthesis(Application(vec![
+                        Expression::Identifier(Identifier("d"))
+                    ])),
+                    Expression::Identifier(Identifier("e"))
+                ]))
+            ]))
+        );
+    }
+
+    #[test]
     fn test_application() {
         assert_eq!(
             LambdaParser::parse_application("a b"),
