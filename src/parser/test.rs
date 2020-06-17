@@ -306,3 +306,94 @@ fn test_program_newlines() {
         ]))
     );
 }
+
+#[test]
+fn test_program_inner_newlines() {
+    assert_eq!(
+        LambdaParser::parse_program(r"
+            x = (
+                a
+                b
+                )
+            y = a
+        "),
+        Ok(Program(vec![
+            Assignment(Identifier("x"), Application(vec![
+                Expression::Parenthesis(Application(vec![
+                    Expression::Identifier(Identifier("a")),
+                    Expression::Identifier(Identifier("b"))
+                ]))
+            ])),
+            Assignment(Identifier("y"), Application(vec![
+                Expression::Identifier(Identifier("a")),
+            ]))
+        ]))
+    );
+    assert_eq!(
+        LambdaParser::parse_program(r"
+            x = (a -> b
+                c
+            )
+            y = a
+        "),
+        Ok(Program(vec![
+            Assignment(Identifier("x"), Application(vec![
+                Expression::Parenthesis(Application(vec![
+                    Expression::Lambda(Lambda(Identifier("a"), Application(vec![
+                        Expression::Identifier(Identifier("b")),
+                        Expression::Identifier(Identifier("c"))
+                    ]))),
+                ]))
+            ])),
+            Assignment(Identifier("y"), Application(vec![
+                Expression::Identifier(Identifier("a")),
+            ]))
+        ]))
+    );
+    assert_eq!(
+        LambdaParser::parse_program(r"
+            x = ((a -> b)
+                c
+            )
+            y = a
+        "),
+        Ok(Program(vec![
+            Assignment(Identifier("x"), Application(vec![
+                Expression::Parenthesis(Application(vec![
+                    Expression::Parenthesis(Application(vec![
+                        Expression::Lambda(Lambda(Identifier("a"), Application(vec![
+                            Expression::Identifier(Identifier("b")),
+                        ]))),
+                    ])),
+                    Expression::Identifier(Identifier("c"))
+                ]))
+            ])),
+            Assignment(Identifier("y"), Application(vec![
+                Expression::Identifier(Identifier("a")),
+            ]))
+        ]))
+    );
+
+    assert!(
+        LambdaParser::parse_program(r"
+            x =
+                a
+                b
+            y = a
+        ").is_err()
+    );
+    assert!(
+        LambdaParser::parse_program(r"
+            x = a -> b
+                c
+            y = a
+        ").is_err()
+    );
+    assert!(
+        LambdaParser::parse_program(r"
+            x = (a -> b)
+                c
+            y = a
+        ").is_err()
+    );
+}
