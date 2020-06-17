@@ -1,4 +1,4 @@
-mod error;
-mod parser;
-mod ast;
-mod codegen;
+pub mod error;
+pub mod parser;
+pub mod ast;
+pub mod codegen;
