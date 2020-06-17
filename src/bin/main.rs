@@ -57,7 +57,10 @@ fn main() -> Result<(), String> {
 
     let parsed = match LambdaParser::parse_program(&code) {
         Ok(program) => program,
-        Err(Error::ParseError(e)) => return Err(format!("failed to parse: {}", e)),
+        Err(Error::ParseError(e)) => {
+            eprintln!("\n{}", e);
+            return Err(String::from("failed to parse program"));
+        }
         Err(Error::AstError(_)) => return Err(String::from("failed to build AST"))
     };
 
