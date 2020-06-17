@@ -36,8 +36,8 @@ pub fn make_lambda(pair: Pair<'_>) -> Result<Lambda<'_>, Error> {
     ensure_rule(&pair, Rule::lambda)?;
 
     let mut inner = pair.into_inner();
-    let ident = inner.next().ok_or(ast_error())?;
-    let expr = inner.next().ok_or(ast_error())?;
+    let ident = inner.next().ok_or_else(ast_error)?;
+    let expr = inner.next().ok_or_else(ast_error)?;
     if inner.next() != None { ast_error_result()? }
 
     Ok(Lambda(make_identifier(ident)?, make_application(expr)?))
@@ -47,7 +47,7 @@ pub fn make_parenthesis(pair: Pair<'_>) -> Result<Application<'_>, Error> {
     ensure_rule(&pair, Rule::parenthesis)?;
 
     let mut inner = pair.into_inner();
-    let app = inner.next().ok_or(ast_error())?;
+    let app = inner.next().ok_or_else(ast_error)?;
     if inner.next() != None { ast_error_result()? }
 
     make_application(app)
@@ -57,7 +57,7 @@ pub fn make_expression(pair: Pair<'_>) -> Result<Expression<'_>, Error> {
     ensure_rule(&pair, Rule::expression)?;
 
     let mut inner = pair.into_inner();
-    let expr = inner.next().ok_or(ast_error())?;
+    let expr = inner.next().ok_or_else(ast_error)?;
     if inner.next() != None { ast_error_result()? }
 
     match expr.as_rule() {
@@ -82,8 +82,8 @@ pub fn make_assignment(pair: Pair<'_>) -> Result<Assignment<'_>, Error> {
     ensure_rule(&pair, Rule::assignment)?;
 
     let mut inner = pair.into_inner();
-    let ident = inner.next().ok_or(ast_error())?;
-    let app = inner.next().ok_or(ast_error())?;
+    let ident = inner.next().ok_or_else(ast_error)?;
+    let app = inner.next().ok_or_else(ast_error)?;
     if inner.next() != None { ast_error_result()? }
 
     Ok(Assignment(make_identifier(ident)?, make_application(app)?))
@@ -107,7 +107,7 @@ pub fn make_program(pair: Pair<'_>) -> Result<Program<'_>, Error> {
 pub fn from_pairs<'i, T, M>(mut pairs: Pairs<'i>, maker: M) -> Result<T, Error>
     where T: 'i, M: Maker<'i, T>
 {
-    let pair = pairs.next().ok_or(ast_error())?;
+    let pair = pairs.next().ok_or_else(ast_error)?;
     if pairs.next() != None { ast_error_result()? }
 
     maker(pair)
