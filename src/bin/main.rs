@@ -53,12 +53,12 @@ fn main() -> Result<(), String> {
     };
 
     let code = read_to_string(file)
-        .map_err(|e| format!("error: failed to read file: {}", e))?;
+        .map_err(|e| format!("failed to read file: {}", e))?;
 
     let parsed = match LambdaParser::parse_program(&code) {
         Ok(program) => program,
-        Err(Error::ParseError(e)) => return Err(format!("error: failed to parse: {}", e)),
-        Err(Error::AstError(_)) => return Err(String::from("error: failed to build AST"))
+        Err(Error::ParseError(e)) => return Err(format!("failed to parse: {}", e)),
+        Err(Error::AstError(_)) => return Err(String::from("failed to build AST"))
     };
 
     match opt {
