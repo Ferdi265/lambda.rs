@@ -293,4 +293,74 @@ mod test {
             ]))
         );
     }
+
+    #[test]
+    fn test_program_newlines() {
+        assert_eq!(
+            LambdaParser::parse_program(r"
+                true =
+                    a ->
+                    b ->
+                    a
+                false
+                    = a
+                    ->
+                    b -> b
+                not = a -> a false true
+            "),
+            Ok(Program(vec![
+                Assignment(Identifier("true"), Application(vec![
+                    Expression::Lambda(Lambda(Identifier("a"), Application(vec![
+                        Expression::Lambda(Lambda(Identifier("b"), Application(vec![
+                            Expression::Identifier(Identifier("a"))
+                        ])))
+                    ])))
+                ])),
+                Assignment(Identifier("false"), Application(vec![
+                    Expression::Lambda(Lambda(Identifier("a"), Application(vec![
+                        Expression::Lambda(Lambda(Identifier("b"), Application(vec![
+                            Expression::Identifier(Identifier("b"))
+                        ])))
+                    ])))
+                ])),
+                Assignment(Identifier("not"), Application(vec![
+                    Expression::Lambda(Lambda(Identifier("a"), Application(vec![
+                        Expression::Identifier(Identifier("a")),
+                        Expression::Identifier(Identifier("false")),
+                        Expression::Identifier(Identifier("true"))
+                    ])))
+                ]))
+            ]))
+        );
+        assert_eq!(
+            LambdaParser::parse_program(r"
+                x =
+                    (a b)
+                y = (
+                    a b)
+                z = (a b
+                    )
+            "),
+            Ok(Program(vec![
+                Assignment(Identifier("x"), Application(vec![
+                    Expression::Parenthesis(Application(vec![
+                        Expression::Identifier(Identifier("a")),
+                        Expression::Identifier(Identifier("b"))
+                    ]))
+                ])),
+                Assignment(Identifier("y"), Application(vec![
+                    Expression::Parenthesis(Application(vec![
+                        Expression::Identifier(Identifier("a")),
+                        Expression::Identifier(Identifier("b"))
+                    ]))
+                ])),
+                Assignment(Identifier("z"), Application(vec![
+                    Expression::Parenthesis(Application(vec![
+                        Expression::Identifier(Identifier("a")),
+                        Expression::Identifier(Identifier("b"))
+                    ]))
+                ]))
+            ]))
+        );
+    }
 }
