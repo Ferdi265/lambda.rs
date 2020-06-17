@@ -433,4 +433,21 @@ fn test_program_comments() {
             ]))
         ]))
     );
+    assert_eq!(
+        LambdaParser::parse_program(r"# foo
+            # bar
+
+            # the two possible bools
+            true = a -> b -> a
+        "),
+        Ok(Program(vec![
+            Assignment(Identifier("true"), Application(vec![
+                Expression::Lambda(Lambda(Identifier("a"), Application(vec![
+                    Expression::Lambda(Lambda(Identifier("b"), Application(vec![
+                        Expression::Identifier(Identifier("a"))
+                    ])))
+                ])))
+            ]))
+        ]))
+    );
 }
