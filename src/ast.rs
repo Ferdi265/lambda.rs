@@ -24,7 +24,7 @@ pub enum Expression<'i> {
 pub struct Application<'i>(pub Vec<Expression<'i>>);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Assignment<'i>(pub Identifier<'i>, Application<'i>);
+pub struct Assignment<'i>(pub Identifier<'i>, pub Application<'i>);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Program<'i>(pub Vec<Assignment<'i>>);
