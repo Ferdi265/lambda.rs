@@ -117,7 +117,12 @@ pub fn make_program(pair: Pair<'_>) -> Result<Program<'_>, Error> {
     ensure_rule(&pair, Rule::program)?;
 
     let asss: Vec<_> = pair.into_inner()
-        .map(make_assignment)
+        .flat_map(|ass| match ass.as_rule() {
+            Rule::assignment => Some(make_assignment(ass)),
+            Rule::EOI => None,
+            _ => Some(ast_error_result())
+
+        })
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(Program(asss))
