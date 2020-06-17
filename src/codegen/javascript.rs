@@ -70,7 +70,7 @@ static RESERVED_WORDS: [&str; 64] = [
 pub struct JavaScript;
 
 impl CodegenTarget for JavaScript {
-    fn generate_identifier<'i>(ident: &Identifier<'i>) -> String {
+    fn generate_identifier<'i>(&self, ident: &Identifier<'i>) -> String {
         if RESERVED_WORDS.contains(&ident.0) {
             format!("_${}", ident.0)
         } else {
@@ -78,42 +78,42 @@ impl CodegenTarget for JavaScript {
         }
     }
 
-    fn generate_lambda<'i>(lambda: &Lambda<'i>) -> String {
-        format!("{} => {}", Self::generate_identifier(&lambda.0), Self::generate_application(&lambda.1))
+    fn generate_lambda<'i>(&self, lambda: &Lambda<'i>) -> String {
+        format!("{} => {}", self.generate_identifier(&lambda.0), self.generate_application(&lambda.1))
     }
 
-    fn generate_expression<'i>(expr: &Expression<'i>) -> String {
+    fn generate_expression<'i>(&self, expr: &Expression<'i>) -> String {
         match expr {
-            Expression::Identifier(ident) => Self::generate_identifier(ident),
-            Expression::Parenthesis(app) => format!("({})", Self::generate_application(app)),
-            Expression::Lambda(lambda) => Self::generate_lambda(lambda)
+            Expression::Identifier(ident) => self.generate_identifier(ident),
+            Expression::Parenthesis(app) => format!("({})", self.generate_application(app)),
+            Expression::Lambda(lambda) => self.generate_lambda(lambda)
         }
     }
 
-    fn generate_application<'i>(app: &Application<'i>) -> String {
+    fn generate_application<'i>(&self, app: &Application<'i>) -> String {
         let mut iter = app.0.iter();
         let mut res = String::new();
 
         if let Some(expr) = iter.next() {
-            res += &Self::generate_expression(expr);
+            res += &self.generate_expression(expr);
         }
 
         for expr in iter {
-            res += &format!("({})", Self::generate_expression(expr));
+            res += &format!("({})", self.generate_expression(expr));
         }
 
         res
     }
 
-    fn generate_assignment<'i>(ass: &Assignment<'i>) -> String {
-        format!("const {} = {};", Self::generate_identifier(&ass.0), Self::generate_application(&ass.1))
+    fn generate_assignment<'i>(&self, ass: &Assignment<'i>) -> String {
+        format!("const {} = {};", self.generate_identifier(&ass.0), self.generate_application(&ass.1))
     }
 
-    fn generate_program<'i>(program: &Program<'i>) -> String {
+    fn generate_program<'i>(&self, program: &Program<'i>) -> String {
         let mut res = String::new();
 
         for ass in program.0.iter() {
-            res += &format!("{}\n", Self::generate_assignment(ass));
+            res += &format!("{}\n", self.generate_assignment(ass));
         }
 
         res
