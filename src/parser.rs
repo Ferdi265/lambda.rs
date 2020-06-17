@@ -106,7 +106,7 @@ mod test {
             ]))
         );
         assert_eq!(
-            LambdaParser::parse_parenthesis("a (b c) ((d) e)"),
+            LambdaParser::parse_parenthesis("(a (b c) ((d) e))"),
             Ok(Application(vec![
                 Expression::Identifier(Identifier("a")),
                 Expression::Parenthesis(Application(vec![
