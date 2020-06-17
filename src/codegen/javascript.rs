@@ -69,9 +69,21 @@ static RESERVED_WORDS: [&str; 64] = [
 
 pub struct JavaScript;
 
+fn is_reserved(name: &str) -> bool {
+    RESERVED_WORDS.contains(&name)
+}
+
+fn is_numeric(name: &str) -> bool {
+    if let Some(c) = name.chars().next() {
+        c.is_numeric()
+    } else {
+        false
+    }
+}
+
 impl CodegenTarget for JavaScript {
     fn generate_identifier<'i>(&self, ident: &Identifier<'i>) -> String {
-        if RESERVED_WORDS.contains(&ident.0) {
+        if is_reserved(ident.0) || is_numeric(ident.0) {
             format!("_${}", ident.0)
         } else {
             ident.0.to_string()
