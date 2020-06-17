@@ -200,13 +200,17 @@ mod test {
     fn test_lambda() {
         assert_eq!(
             LambdaParser::parse_lambda("a -> b"),
-            Ok(Lambda(Identifier("a"), Application(vec![Expression::Identifier(Identifier("b"))])))
+            Ok(Lambda(Identifier("a"), Application(vec![
+                Expression::Identifier(Identifier("b"))
+            ])))
         );
         assert_eq!(
             LambdaParser::parse_lambda("a -> b -> c"),
-            Ok(Lambda(Identifier("a"), Application(vec![Expression::Lambda(
-                Lambda(Identifier("b"), Application(vec![Expression::Identifier(Identifier("c"))]))
-            )])))
+            Ok(Lambda(Identifier("a"), Application(vec![
+                Expression::Lambda(Lambda(Identifier("b"), Application(vec![
+                    Expression::Identifier(Identifier("c"))
+                ])))
+            ])))
         );
         assert_eq!(
             LambdaParser::parse_lambda("a -> b c"),
@@ -217,5 +221,53 @@ mod test {
         );
 
         assert!(LambdaParser::parse_lambda("(a -> b) -> c").is_err());
+    }
+
+    #[test]
+    fn test_application() {
+        assert_eq!(
+            LambdaParser::parse_application("a b"),
+            Ok(Application(vec![
+                Expression::Identifier(Identifier("a")),
+                Expression::Identifier(Identifier("b"))
+            ]))
+        );
+        assert_eq!(
+            LambdaParser::parse_application("a b c"),
+            Ok(Application(vec![
+                Expression::Identifier(Identifier("a")),
+                Expression::Identifier(Identifier("b")),
+                Expression::Identifier(Identifier("c"))
+            ]))
+        );
+        assert_eq!(
+            LambdaParser::parse_application("(a b) c"),
+            Ok(Application(vec![
+                Expression::Parenthesis(Application(vec![
+                    Expression::Identifier(Identifier("a")),
+                    Expression::Identifier(Identifier("b")),
+                ])),
+                Expression::Identifier(Identifier("c"))
+            ]))
+        );
+        assert_eq!(
+            LambdaParser::parse_application("a (b c)"),
+            Ok(Application(vec![
+                Expression::Identifier(Identifier("a")),
+                Expression::Parenthesis(Application(vec![
+                    Expression::Identifier(Identifier("b")),
+                    Expression::Identifier(Identifier("c")),
+                ]))
+            ]))
+        );
+        assert_eq!(
+            LambdaParser::parse_application("a b -> c"),
+            Ok(Application(vec![
+                Expression::Identifier(Identifier("a")),
+                Expression::Lambda(Lambda(Identifier("b"), Application(vec![
+                    Expression::Identifier(Identifier("c"))
+                ])))
+            ]))
+        );
     }
 }
