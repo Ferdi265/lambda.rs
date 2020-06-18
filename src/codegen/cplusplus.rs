@@ -167,7 +167,7 @@ impl CPlusPlus {
     fn generate_lambda_impl(&self, ctx: &mut Context<'_>, lambda: &Lambda<'_>) {
         let ident = self.generate_lambda_identifier(ctx.current_assignment, lambda.id);
 
-        let mut res = format!("lambda {}(lambda captures[], lamda arg) {{\n", ident);
+        let mut res = format!("lambda {}(lambda captures[], lambda arg) {{\n", ident);
 
         for (i, cap) in lambda.captures.iter().enumerate() {
             let cap_ident = self.generate_identifier(cap);
