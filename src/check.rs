@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use crate::ast::*;
 use crate::ast::checked;
@@ -6,35 +6,39 @@ use crate::ast::checked;
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Context<'i> {
     current_assignment: Identifier<'i>,
+    current_id: usize,
     diagnostics: Vec<String>,
-    globals: HashSet<Identifier<'i>>,
-    locals: HashSet<Identifier<'i>>,
-    referenced: HashSet<Identifier<'i>>
+    globals: BTreeSet<Identifier<'i>>,
+    locals: BTreeSet<Identifier<'i>>,
+    referenced: BTreeSet<Identifier<'i>>
 }
 
 impl<'i> Context<'i> {
     fn new(current_assignment: Identifier<'i>) -> Self {
         Context {
             current_assignment,
+            current_id: 0,
             diagnostics: Vec::new(),
-            globals: HashSet::new(),
-            locals: HashSet::new(),
-            referenced: HashSet::new()
+            globals: BTreeSet::new(),
+            locals: BTreeSet::new(),
+            referenced: BTreeSet::new()
         }
     }
 
     fn merge(&mut self, other: Self) {
         self.diagnostics.extend(other.diagnostics);
         self.referenced.extend(other.referenced);
+        self.current_id = other.current_id;
     }
 
     fn split(&self) -> Self {
         Context {
             current_assignment: self.current_assignment,
+            current_id: self.current_id,
             diagnostics: Vec::new(),
             globals: self.globals.clone(),
             locals: self.locals.clone(),
-            referenced: HashSet::new()
+            referenced: BTreeSet::new()
         }
     }
 
@@ -42,6 +46,18 @@ impl<'i> Context<'i> {
         let mut ctx = self.split();
         ctx.add_local(local);
         ctx
+    }
+
+    fn get_id(&mut self) -> usize {
+        let id = self.current_id;
+        self.current_id += 1;
+
+        id
+    }
+
+    fn set_assignment(&mut self, ident: Identifier<'i>) {
+        self.current_assignment = ident;
+        self.current_id = 0;
     }
 
     fn add_diagnostic(&mut self, level: &str, msg: String) {
@@ -93,7 +109,7 @@ fn check_assignment<'i>(ass: &Assignment<'i>, ctx: &mut Context<'i>) -> checked:
         ctx.add_diagnostic("error", format!("redefinition of '{}'", ass.target));
     }
 
-    ctx.current_assignment = ass.target;
+    ctx.set_assignment(ass.target);
 
     checked::Assignment {
         target: ass.target,
@@ -138,17 +154,19 @@ fn check_expression<'i>(expr: &Expression<'i>, ctx: &mut Context<'i>) -> checked
 }
 
 fn check_lambda<'i>(lambda: &Lambda<'i>, ctx: &mut Context<'i>) -> checked::Lambda<'i> {
+    let id = ctx.get_id();
     let mut subctx = ctx.split_with_local(lambda.argument);
 
     let body = check_application(&lambda.body, &mut subctx);
 
     subctx.referenced.remove(lambda.argument);
-    let captures: HashSet<_> = subctx.referenced.intersection(&ctx.locals)
+    let captures: BTreeSet<_> = subctx.referenced.intersection(&ctx.locals)
         .copied().collect();
 
     ctx.merge(subctx);
 
     checked::Lambda {
+        id,
         argument: lambda.argument,
         body,
         captures

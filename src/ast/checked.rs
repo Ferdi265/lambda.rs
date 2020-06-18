@@ -1,12 +1,13 @@
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 pub use super::Identifier;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Lambda<'i> {
+    pub id: usize,
     pub argument: Identifier<'i>,
     pub body: Application<'i>,
-    pub captures: HashSet<Identifier<'i>>
+    pub captures: BTreeSet<Identifier<'i>>
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
