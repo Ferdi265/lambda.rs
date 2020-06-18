@@ -1,4 +1,4 @@
-use crate::ast::*;
+use crate::ast::checked::*;
 
 pub trait CodegenTarget {
     fn generate_identifier<'i>(&self, ident: Identifier<'i>) -> String;
