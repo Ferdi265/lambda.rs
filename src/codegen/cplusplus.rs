@@ -177,7 +177,7 @@ impl CPlusPlus {
         let arg_ident = self.generate_identifier(lambda.argument);
         res += &format!("    lambda {} = arg\n", arg_ident);
 
-        res += "    ";
+        res += "    return ";
         res += &self.generate_application(ctx, &lambda.body);
         res += ";\n}\n";
 
