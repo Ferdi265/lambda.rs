@@ -5,6 +5,11 @@
 ident = a -> a
 
 
+# y fixed point combinator
+# used to build recursive functions
+y = g -> (f -> f f) f -> g (x -> f f x)
+
+
 # type bool : a -> b -> res
 # res is either a or b
 
@@ -65,9 +70,9 @@ rest = list -> empty list nil (2nd list)
 
 # apply a function to each element of a list
 # returns a new list with every element being the result of the function called with the old element
-map = f -> list -> empty list (x -> nil) (x -> prepend (f (first list)) (map f (rest list))) ident
+map = y map -> f -> list -> empty list (x -> nil) (x -> prepend (f (first list)) (map f (rest list))) ident
 
 # accumulate a result by applying a function to successive list elements
 # left-associative and right-associative variants
-foldl = f -> initial -> list -> empty list (x -> initial) (x -> foldl f (f initial (first list)) (rest list)) ident
-foldr = f -> initial -> list -> empty list (x -> initial) (x -> f (first list) (foldr f initial (rest list))) ident
+foldl = y foldl -> f -> initial -> list -> empty list (x -> initial) (x -> foldl f (f initial (first list)) (rest list)) ident
+foldr = y foldr -> f -> initial -> list -> empty list (x -> initial) (x -> f (first list) (foldr f initial (rest list))) ident
