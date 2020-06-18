@@ -30,6 +30,11 @@ nand = a -> b -> not (and a b)
 nor = a -> b -> not (or a b)
 xnor = a -> b -> not (xor a b)
 
+# utility function for type conversion loops
+# usage: until2 cond f_iter f_val i_iter i_val
+until2 = cond -> fiter -> fval -> iiter -> ival -> (y until2 ->
+    iiter -> ival -> cond iiter (x -> ival) (x -> until2 (fiter iiter) (fval ival)) ident
+) iiter ival
 
 # type tuple : bool -> res
 # container type, internally stores two values
@@ -76,3 +81,61 @@ map = y map -> f -> list -> empty list (x -> nil) (x -> prepend (f (first list))
 # left-associative and right-associative variants
 foldl = y foldl -> f -> initial -> list -> empty list (x -> initial) (x -> foldl f (f initial (first list)) (rest list)) ident
 foldr = y foldr -> f -> initial -> list -> empty list (x -> initial) (x -> f (first list) (foldr f initial (rest list))) ident
+
+
+# type nat : (iszero, pred)
+# define naturals as lists without content
+
+# analogous to nil
+zero = tuple true ident
+# analogous to empty
+iszero = nat -> 1st nat
+# analogous to prepend
+succ = nat -> tuple false nat
+# analogous to rest
+pred = nat -> 2nd nat
+
+# call f on an input n times
+count = y count -> f -> initial -> nat -> iszero nat (x -> initial) (x -> count f (f initial) (pred nat)) ident
+
+# addition and subtraction
+add = y add -> nat1 -> nat2 -> iszero nat2 (x -> nat1) (x -> add (succ nat1) (pred nat2)) ident
+sub = y sub -> nat1 -> nat2 -> iszero nat2 (x -> nat1) (x -> sub (pred nat1) (pred nat2)) ident
+
+# multiplication
+mul = nat1 -> nat2 -> (y mul -> res -> iter -> iszero iter (x -> res) (x -> mul (add res nat1) (pred iter)) ident) zero nat2
+
+# comparison
+less = y less -> nat1 -> nat2 -> iszero nat1 (x -> not (iszero nat2)) (iszero nat2 (x -> false) (x -> less (pred nat1) (pred nat2))) ident
+equal = y equal -> nat1 -> nat2 -> iszero nat1 (x -> iszero nat2) (iszero nat2 (x -> false) (x -> equal (pred nat1) (pred nat2))) ident
+greater = nat1 -> nat2 -> less nat2 nat1
+
+
+# bubble sort
+trivially_sorted = list ->
+    (empty list
+        (x -> true)
+        (x -> empty (rest list))
+    ident)
+
+sorted = y sorted -> list ->
+    (trivially_sorted list
+        (x -> true)
+    (x -> less (first list) (first (rest list))
+        (x -> sorted (rest list))
+        (x -> false)
+    ident) ident)
+
+bubble_iter = y bubble_iter -> list ->
+    (trivially_sorted list
+        (x -> list)
+    (x -> less (first list) (first (rest list))
+        (x -> prepend (first list) (bubble_iter (rest list)))
+        (x -> prepend (first (rest list)) (bubble_iter (prepend (first list) (rest (rest list)))))
+    ident) ident)
+
+bubble_sort = y bubble_sort -> list ->
+    (sorted list
+        (x -> list)
+        (x -> bubble_sort (bubble_iter list))
+    ident)
