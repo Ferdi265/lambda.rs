@@ -7,5 +7,5 @@ pub trait CodegenTarget {
 mod javascript;
 mod python;
 
-pub use javascript::*;
-pub use python::*;
+pub use javascript::JavaScript;
+pub use python::Python;
