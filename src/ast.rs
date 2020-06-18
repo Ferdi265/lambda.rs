@@ -1,11 +1,13 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AstError;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Identifier<'i>(pub &'i str);
+pub type Identifier<'i> = &'i str;
 
 #[derive(Clone, PartialEq, Eq)]
-pub struct Lambda<'i>(pub Identifier<'i>, pub Application<'i>);
+pub struct Lambda<'i> {
+    pub argument: Identifier<'i>,
+    pub body: Application<'i>
+}
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum Expression<'i> {
@@ -15,13 +17,20 @@ pub enum Expression<'i> {
 }
 
 #[derive(Clone, PartialEq, Eq)]
-pub struct Application<'i>(pub Vec<Expression<'i>>);
+pub struct Application<'i> {
+    pub expressions: Vec<Expression<'i>>
+}
 
 #[derive(Clone, PartialEq, Eq)]
-pub struct Assignment<'i>(pub Identifier<'i>, pub Application<'i>);
+pub struct Assignment<'i> {
+    pub target: Identifier<'i>,
+    pub value: Application<'i>
+}
 
 #[derive(Clone, PartialEq, Eq)]
-pub struct Program<'i>(pub Vec<Assignment<'i>>);
+pub struct Program<'i> {
+    pub assignments: Vec<Assignment<'i>>
+}
 
 mod fmt;
 mod maker;

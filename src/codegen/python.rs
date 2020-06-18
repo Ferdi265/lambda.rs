@@ -60,16 +60,16 @@ fn is_underscore(name: &str) -> bool {
 }
 
 impl CodegenTarget for Python {
-    fn generate_identifier<'i>(&self, ident: &Identifier<'i>) -> String {
-        if is_reserved(ident.0) || is_numeric(ident.0) || is_underscore(ident.0) {
-            format!("_{}", ident.0)
+    fn generate_identifier<'i>(&self, ident: Identifier<'i>) -> String {
+        if is_reserved(ident) || is_numeric(ident) || is_underscore(ident) {
+            format!("_{}", ident)
         } else {
-            ident.0.to_string()
+            ident.to_string()
         }
     }
 
     fn generate_lambda<'i>(&self, lambda: &Lambda<'i>) -> String {
-        format!("lambda {}: {}", self.generate_identifier(&lambda.0), self.generate_application(&lambda.1))
+        format!("lambda {}: {}", self.generate_identifier(&lambda.argument), self.generate_application(&lambda.body))
     }
 
     fn generate_expression<'i>(&self, expr: &Expression<'i>) -> String {
@@ -81,7 +81,7 @@ impl CodegenTarget for Python {
     }
 
     fn generate_application<'i>(&self, app: &Application<'i>) -> String {
-        let mut iter = app.0.iter();
+        let mut iter = app.expressions.iter();
         let mut res = String::new();
 
         if let Some(expr) = iter.next() {
@@ -96,13 +96,13 @@ impl CodegenTarget for Python {
     }
 
     fn generate_assignment<'i>(&self, ass: &Assignment<'i>) -> String {
-        format!("{} = {}", self.generate_identifier(&ass.0), self.generate_application(&ass.1))
+        format!("{} = {}", self.generate_identifier(&ass.target), self.generate_application(&ass.value))
     }
 
     fn generate_program<'i>(&self, program: &Program<'i>) -> String {
         let mut res = String::new();
 
-        for ass in program.0.iter() {
+        for ass in program.assignments.iter() {
             res += &format!("{}\n", self.generate_assignment(ass));
         }
 

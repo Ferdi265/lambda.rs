@@ -6,15 +6,9 @@ use std::fmt::Formatter;
 use std::fmt::Result as FmtResult;
 use std::fmt::Error as FmtError;
 
-impl<'i> Display for Identifier<'i> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{}", self.0)
-    }
-}
-
 impl<'i> Display for Lambda<'i> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{} -> {}", self.0, self.1)
+        write!(f, "{} -> {}", self.argument, self.body)
     }
 }
 
@@ -30,7 +24,7 @@ impl<'i> Display for Expression<'i> {
 
 impl<'i> Display for Application<'i> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        let mut iter = self.0.iter();
+        let mut iter = self.expressions.iter();
 
         if let Some(expr) = iter.next() {
             write!(f, "{}", expr)?;
@@ -48,23 +42,17 @@ impl<'i> Display for Application<'i> {
 
 impl<'i> Display for Assignment<'i> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{} = {}", self.0, self.1)
+        write!(f, "{} = {}", self.target, self.value)
     }
 }
 
 impl<'i> Display for Program<'i> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        for ass in self.0.iter() {
+        for ass in self.assignments.iter() {
             writeln!(f, "{}", ass)?;
         }
 
         Ok(())
-    }
-}
-
-impl<'i> Debug for Identifier<'i> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "AST({})", self)
     }
 }
 
