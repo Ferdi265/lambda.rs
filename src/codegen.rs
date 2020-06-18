@@ -6,6 +6,8 @@ pub trait CodegenTarget {
 
 mod javascript;
 mod python;
+mod cplusplus;
 
 pub use javascript::JavaScript;
 pub use python::Python;
+pub use cplusplus::CPlusPlus;
