@@ -5,10 +5,13 @@ pub trait CodegenTarget {
 }
 
 mod util;
-mod javascript;
-mod python;
-mod cplusplus;
 
-pub use javascript::JavaScript;
-pub use python::Python;
+mod cplusplus;
+mod javascript;
+mod lua;
+mod python;
+
 pub use cplusplus::CPlusPlus;
+pub use javascript::JavaScript;
+pub use lua::Lua;
+pub use python::Python;

@@ -36,12 +36,13 @@ struct Target(Box<dyn CodegenTarget>);
 impl FromStr for Target {
     type Err = &'static str;
     fn from_str(target: &str) -> Result<Target, Self::Err> {
-        match target {
-            "javascript" | "js" => Ok(Target(Box::new(JavaScript))),
-            "python" | "py" => Ok(Target(Box::new(Python))),
-            "c++" | "cplusplus" | "cxx" | "cpp" => Ok(Target(Box::new(CPlusPlus))),
-            _ => Err("unsupported target")
-        }
+        Ok(Target(match target {
+            "c++" | "cplusplus" | "cxx" | "cpp" => Box::new(CPlusPlus),
+            "javascript" | "js" => Box::new(JavaScript),
+            "lua" => Box::new(Lua),
+            "python" | "py" => Box::new(Python),
+            _ => return Err("unsupported target")
+        }))
     }
 }
 
