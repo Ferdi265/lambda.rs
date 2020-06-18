@@ -45,10 +45,7 @@ impl<'i> Context<'i> {
     }
 
     fn add_diagnostic(&mut self, level: &str, msg: String) {
-        self.diagnostics.push(format!(
-            "{}: in definition of '{}': {}",
-            level, self.current_assignment, msg
-        ));
+        self.diagnostics.push(format!("{}: {}", level, msg));
     }
 
     fn add_global(&mut self, ident: Identifier<'i>) {
@@ -92,7 +89,11 @@ pub fn check_program<'i>(program: &Program<'i>) -> CheckResult<'i> {
 }
 
 fn check_assignment<'i>(ass: &Assignment<'i>, ctx: &mut Context<'i>) -> checked::Assignment<'i> {
-    ctx.current_assignment= ass.target;
+    if ctx.contains(ass.target) {
+        ctx.add_diagnostic("error", format!("redefinition of '{}'", ass.target));
+    }
+
+    ctx.current_assignment = ass.target;
 
     checked::Assignment {
         target: ass.target,
@@ -117,9 +118,15 @@ fn check_expression<'i>(expr: &Expression<'i>, ctx: &mut Context<'i>) -> checked
 
             if !ctx.contains(ident) {
                 if ident == &ctx.current_assignment {
-                    ctx.add_diagnostic("error", format!("name '{}' referenced in its definition", ident));
+                    ctx.add_diagnostic("error", format!(
+                        "name '{}' referenced in its definition",
+                        ident
+                    ));
                 } else {
-                    ctx.add_diagnostic("error", format!("undefined name '{}'", ident));
+                    ctx.add_diagnostic("error", format!(
+                        "undefined name '{}' in definition of '{}'",
+                        ctx.current_assignment, ident
+                    ));
                 }
             }
 
