@@ -7,14 +7,20 @@ use structopt::StructOpt;
 
 use lambda::error::Error;
 use lambda::parser::LambdaParser;
+use lambda::check::check_program;
 use lambda::codegen::*;
 
 #[derive(StructOpt)]
 #[structopt(about = "a simple functional language inspired by the lambda calculus")]
+#[structopt(rename_all = "kebab-case")]
 enum Options {
-    Pretty {
+    Check {
         #[structopt(parse(from_os_str))]
         file: PathBuf
+    },
+    Pretty {
+        #[structopt(parse(from_os_str))]
+        file: PathBuf,
     },
     Codegen {
         #[structopt(parse(from_os_str))]
@@ -49,7 +55,8 @@ fn main() -> Result<(), String> {
     let opt = Options::from_args();
 
     let file = match &opt {
-        Options::Pretty { file } => file,
+        Options::Check { file, .. } => file,
+        Options::Pretty { file, .. } => file,
         Options::Codegen { file, .. } => file
     };
 
@@ -65,9 +72,15 @@ fn main() -> Result<(), String> {
         Err(Error::AstError(_)) => return Err(String::from("failed to build AST"))
     };
 
+    let check_result = check_program(&parsed);
+    for diagnostic in check_result.diagnostics {
+        println!("{}", diagnostic);
+    }
+
     match opt {
+        Options::Check { .. } => {}
         Options::Pretty { .. } => print!("{}", parsed),
-        Options::Codegen { target, .. } => print!("{}", target.generate_program(&parsed))
+        Options::Codegen { target, .. } => print!("{}", target.generate_program(&check_result.program))
     }
 
     Ok(())
