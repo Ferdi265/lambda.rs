@@ -80,7 +80,7 @@ fn main() -> Result<(), String> {
     match opt {
         Options::Check { .. } => {}
         Options::Pretty { .. } => print!("{}", parsed),
-        Options::Codegen { target, .. } => print!("{}", target.generate_program(&check_result.program))
+        Options::Codegen { target, .. } => print!("{}", target.generate(&check_result.program))
     }
 
     Ok(())

@@ -89,8 +89,8 @@ fn is_underscore(name: &str) -> bool {
     }
 }
 
-impl CodegenTarget for JavaScript {
-    fn generate_identifier<'i>(&self, ident: Identifier<'i>) -> String {
+impl JavaScript {
+    fn generate_identifier(&self, ident: Identifier<'_>) -> String {
         if is_reserved(ident) || is_numeric(ident) || is_underscore(ident) {
             format!("_{}", ident)
         } else {
@@ -98,11 +98,11 @@ impl CodegenTarget for JavaScript {
         }
     }
 
-    fn generate_lambda<'i>(&self, lambda: &Lambda<'i>) -> String {
+    fn generate_lambda(&self, lambda: &Lambda<'_>) -> String {
         format!("{} => {}", self.generate_identifier(&lambda.argument), self.generate_application(&lambda.body))
     }
 
-    fn generate_expression<'i>(&self, expr: &Expression<'i>) -> String {
+    fn generate_expression(&self, expr: &Expression<'_>) -> String {
         match expr {
             Expression::Identifier(ident) => self.generate_identifier(ident),
             Expression::Parenthesis(app) => format!("({})", self.generate_application(app)),
@@ -110,7 +110,7 @@ impl CodegenTarget for JavaScript {
         }
     }
 
-    fn generate_application<'i>(&self, app: &Application<'i>) -> String {
+    fn generate_application(&self, app: &Application<'_>) -> String {
         let mut iter = app.expressions.iter();
         let mut res = String::new();
 
@@ -125,11 +125,14 @@ impl CodegenTarget for JavaScript {
         res
     }
 
-    fn generate_assignment<'i>(&self, ass: &Assignment<'i>) -> String {
+    fn generate_assignment(&self, ass: &Assignment<'_>) -> String {
         format!("const {} = {};", self.generate_identifier(&ass.target), self.generate_application(&ass.value))
     }
 
-    fn generate_program<'i>(&self, program: &Program<'i>) -> String {
+}
+
+impl CodegenTarget for JavaScript {
+    fn generate(&self, program: &Program<'_>) -> String {
         let mut res = String::new();
 
         for ass in program.assignments.iter() {
