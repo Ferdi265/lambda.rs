@@ -39,6 +39,7 @@ impl FromStr for Target {
         match target {
             "javascript" | "js" => Ok(Target(Box::new(JavaScript))),
             "python" | "py" => Ok(Target(Box::new(Python))),
+            "c++" | "cplusplus" | "cxx" | "cpp" => Ok(Target(Box::new(CPlusPlus))),
             _ => Err("unsupported target")
         }
     }
