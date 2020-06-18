@@ -116,7 +116,11 @@ fn check_expression<'i>(expr: &Expression<'i>, ctx: &mut Context<'i>) -> checked
             ctx.add_referenced(ident);
 
             if !ctx.contains(ident) {
-                ctx.add_diagnostic("error", format!("undefined name '{}'", ident));
+                if ident == &ctx.current_assignment {
+                    ctx.add_diagnostic("error", format!("name '{}' referenced in its definition", ident));
+                } else {
+                    ctx.add_diagnostic("error", format!("undefined name '{}'", ident));
+                }
             }
 
             checked::Expression::Identifier(ident)
