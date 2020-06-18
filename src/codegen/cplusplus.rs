@@ -104,47 +104,45 @@ static CODEGEN_PRELUDE: &str = include_str!("prelude.cpp");
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CPlusPlus;
 
-impl CPlusPlus {
-    fn generate_identifier(&self, ident: Identifier<'_>) -> String {
-        util::generate_identifier(ident, &RESERVED_WORDS)
+fn generate_identifier(ident: Identifier<'_>) -> String {
+    util::generate_identifier(ident, &RESERVED_WORDS)
+}
+
+fn generate_lambda(lambda: &Lambda<'_>) -> String {
+    let ident = generate_identifier(lambda.argument);
+    let body = generate_application(&lambda.body);
+
+    format!("lambda([=](lambda {}) {{ return {}; }})", ident, body)
+}
+
+fn generate_expression(expr: &Expression<'_>) -> String {
+    match expr {
+        Expression::Identifier(ident) => generate_identifier(ident),
+        Expression::Parenthesis(app) => format!("({})", generate_application(app)),
+        Expression::Lambda(lambda) => generate_lambda(lambda)
+    }
+}
+
+fn generate_application(app: &Application<'_>) -> String {
+    let mut iter = app.expressions.iter();
+    let mut res = String::new();
+
+    if let Some(expr) = iter.next() {
+        res += &generate_expression(expr);
     }
 
-    fn generate_lambda(&self, lambda: &Lambda<'_>) -> String {
-        let ident = self.generate_identifier(lambda.argument);
-        let body = self.generate_application(&lambda.body);
-
-        format!("lambda([=](lambda {}) {{ return {}; }})", ident, body)
+    for expr in iter {
+        res += &format!("({})", generate_expression(expr));
     }
 
-    fn generate_expression(&self, expr: &Expression<'_>) -> String {
-        match expr {
-            Expression::Identifier(ident) => self.generate_identifier(ident),
-            Expression::Parenthesis(app) => format!("({})", self.generate_application(app)),
-            Expression::Lambda(lambda) => self.generate_lambda(lambda)
-        }
-    }
+    res
+}
 
-    fn generate_application(&self, app: &Application<'_>) -> String {
-        let mut iter = app.expressions.iter();
-        let mut res = String::new();
+fn generate_assignment(ass: &Assignment<'_>) -> String {
+    let target = generate_identifier(ass.target);
+    let app = generate_application(&ass.value);
 
-        if let Some(expr) = iter.next() {
-            res += &self.generate_expression(expr);
-        }
-
-        for expr in iter {
-            res += &format!("({})", self.generate_expression(expr));
-        }
-
-        res
-    }
-
-    fn generate_assignment(&self, ass: &Assignment<'_>) -> String {
-        let target = self.generate_identifier(ass.target);
-        let app = self.generate_application(&ass.value);
-
-        format!("lambda {} = [](){{ return {}; }}();", target, app)
-    }
+    format!("lambda {} = [](){{ return {}; }}();", target, app)
 }
 
 impl CodegenTarget for CPlusPlus {
@@ -154,7 +152,7 @@ impl CodegenTarget for CPlusPlus {
         res += CODEGEN_PRELUDE;
 
         for ass in program.assignments.iter() {
-            res += &format!("{}\n", self.generate_assignment(ass));
+            res += &format!("{}\n", generate_assignment(ass));
         }
 
         res

@@ -40,41 +40,39 @@ static RESERVED_WORDS: [&str; 34] = [
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Python;
 
-impl Python {
-    fn generate_identifier(&self, ident: Identifier<'_>) -> String {
-        util::generate_identifier(ident, &RESERVED_WORDS)
+fn generate_identifier(ident: Identifier<'_>) -> String {
+    util::generate_identifier(ident, &RESERVED_WORDS)
+}
+
+fn generate_lambda(lambda: &Lambda<'_>) -> String {
+    format!("lambda {}: {}", generate_identifier(&lambda.argument), generate_application(&lambda.body))
+}
+
+fn generate_expression(expr: &Expression<'_>) -> String {
+    match expr {
+        Expression::Identifier(ident) => generate_identifier(ident),
+        Expression::Parenthesis(app) => format!("({})", generate_application(app)),
+        Expression::Lambda(lambda) => generate_lambda(lambda)
+    }
+}
+
+fn generate_application(app: &Application<'_>) -> String {
+    let mut iter = app.expressions.iter();
+    let mut res = String::new();
+
+    if let Some(expr) = iter.next() {
+        res += &generate_expression(expr);
     }
 
-    fn generate_lambda(&self, lambda: &Lambda<'_>) -> String {
-        format!("lambda {}: {}", self.generate_identifier(&lambda.argument), self.generate_application(&lambda.body))
+    for expr in iter {
+        res += &format!("({})", generate_expression(expr));
     }
 
-    fn generate_expression(&self, expr: &Expression<'_>) -> String {
-        match expr {
-            Expression::Identifier(ident) => self.generate_identifier(ident),
-            Expression::Parenthesis(app) => format!("({})", self.generate_application(app)),
-            Expression::Lambda(lambda) => self.generate_lambda(lambda)
-        }
-    }
+    res
+}
 
-    fn generate_application(&self, app: &Application<'_>) -> String {
-        let mut iter = app.expressions.iter();
-        let mut res = String::new();
-
-        if let Some(expr) = iter.next() {
-            res += &self.generate_expression(expr);
-        }
-
-        for expr in iter {
-            res += &format!("({})", self.generate_expression(expr));
-        }
-
-        res
-    }
-
-    fn generate_assignment(&self, ass: &Assignment<'_>) -> String {
-        format!("{} = {}", self.generate_identifier(&ass.target), self.generate_application(&ass.value))
-    }
+fn generate_assignment(ass: &Assignment<'_>) -> String {
+    format!("{} = {}", generate_identifier(&ass.target), generate_application(&ass.value))
 }
 
 impl CodegenTarget for Python {
@@ -82,7 +80,7 @@ impl CodegenTarget for Python {
         let mut res = String::new();
 
         for ass in program.assignments.iter() {
-            res += &format!("{}\n", self.generate_assignment(ass));
+            res += &format!("{}\n", generate_assignment(ass));
         }
 
         res
