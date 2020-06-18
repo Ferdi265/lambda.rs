@@ -1,6 +1,6 @@
 use super::*;
 
-static RESERVED_WORDS: [&str; 95] = [
+static RESERVED_WORDS: [&str; 96] = [
     "alignas",
     "alignof",
     "and",
@@ -96,9 +96,6 @@ static RESERVED_WORDS: [&str; 95] = [
     "while",
     "xor",
     "xor_eq ",
-];
-
-static IMPLEMENTATION_WORDS: [&str; 1] = [
     "lambda"
 ];
 
@@ -107,27 +104,9 @@ static CODEGEN_PRELUDE: &str = include_str!("prelude.cpp");
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CPlusPlus;
 
-fn is_reserved(name: &str) -> bool {
-    RESERVED_WORDS.contains(&name) || IMPLEMENTATION_WORDS.contains(&name)
-}
-
-fn is_numeric(name: &str) -> bool {
-    name.starts_with(char::is_numeric)
-}
-
-fn is_underscore(name: &str) -> bool {
-    name.starts_with('_')
-}
-
 impl CPlusPlus {
     fn generate_identifier(&self, ident: Identifier<'_>) -> String {
-        let mut gen = ident.to_string();
-
-        if is_reserved(ident) || is_numeric(ident) || is_underscore(ident) {
-            gen.insert(0, '_');
-        }
-
-        gen
+        util::generate_identifier(ident, &RESERVED_WORDS)
     }
 
     fn generate_lambda(&self, lambda: &Lambda<'_>) -> String {

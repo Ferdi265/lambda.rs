@@ -40,33 +40,9 @@ static RESERVED_WORDS: [&str; 34] = [
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Python;
 
-fn is_reserved(name: &str) -> bool {
-    RESERVED_WORDS.contains(&name)
-}
-
-fn is_numeric(name: &str) -> bool {
-    if let Some(c) = name.chars().next() {
-        c.is_numeric()
-    } else {
-        false
-    }
-}
-
-fn is_underscore(name: &str) -> bool {
-    if let Some(c) = name.chars().next() {
-        c == '_'
-    } else {
-        false
-    }
-}
-
 impl Python {
     fn generate_identifier(&self, ident: Identifier<'_>) -> String {
-        if is_reserved(ident) || is_numeric(ident) || is_underscore(ident) {
-            format!("_{}", ident)
-        } else {
-            ident.to_string()
-        }
+        util::generate_identifier(ident, &RESERVED_WORDS)
     }
 
     fn generate_lambda(&self, lambda: &Lambda<'_>) -> String {

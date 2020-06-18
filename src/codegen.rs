@@ -4,6 +4,7 @@ pub trait CodegenTarget {
     fn generate(&self, program: &Program<'_>) -> String;
 }
 
+mod util;
 mod javascript;
 mod python;
 mod cplusplus;
