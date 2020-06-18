@@ -67,7 +67,7 @@ static RESERVED_WORDS: [&str; 64] = [
     "yield"
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy)]
 pub struct JavaScript;
 
 fn generate_identifier(ident: Identifier<'_>) -> String {

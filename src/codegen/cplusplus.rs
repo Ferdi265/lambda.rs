@@ -101,7 +101,7 @@ static RESERVED_WORDS: [&str; 96] = [
 
 static CODEGEN_PRELUDE: &str = include_str!("prelude.cpp");
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy)]
 pub struct CPlusPlus;
 
 fn generate_identifier(ident: Identifier<'_>) -> String {

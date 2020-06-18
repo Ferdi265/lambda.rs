@@ -37,7 +37,7 @@ static RESERVED_WORDS: [&str; 34] = [
     "yield"
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy)]
 pub struct Python;
 
 fn generate_identifier(ident: Identifier<'_>) -> String {
