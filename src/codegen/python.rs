@@ -37,6 +37,7 @@ static RESERVED_WORDS: [&str; 34] = [
     "yield"
 ];
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Python;
 
 fn is_reserved(name: &str) -> bool {

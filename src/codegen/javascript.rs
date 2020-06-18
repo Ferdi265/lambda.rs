@@ -67,6 +67,7 @@ static RESERVED_WORDS: [&str; 64] = [
     "yield"
 ];
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct JavaScript;
 
 fn is_reserved(name: &str) -> bool {
