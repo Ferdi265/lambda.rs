@@ -171,11 +171,11 @@ impl CPlusPlus {
 
         for (i, cap) in lambda.captures.iter().enumerate() {
             let cap_ident = self.generate_identifier(cap);
-            res += &format!("    lambda {} = captures[{}]\n", cap_ident, i);
+            res += &format!("    lambda {} = captures[{}];\n", cap_ident, i);
         }
 
         let arg_ident = self.generate_identifier(lambda.argument);
-        res += &format!("    lambda {} = arg\n", arg_ident);
+        res += &format!("    lambda {} = arg;\n", arg_ident);
 
         res += "    return ";
         res += &self.generate_application(ctx, &lambda.body);
