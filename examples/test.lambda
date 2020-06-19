@@ -7,7 +7,7 @@ ident = a -> a
 
 # y fixed point combinator
 # used to build recursive functions
-y = g -> (f -> f f) f -> g (x -> f f x)
+y = g -> (f -> f f) f -> g x -> f f x
 
 
 # type bool : a -> b -> res
