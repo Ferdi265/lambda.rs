@@ -40,7 +40,11 @@ pub fn make_lambda(pair: Pair<'_>) -> Result<Lambda<'_>, Error> {
     let expr = inner.next().ok_or_else(ast_error)?;
     if inner.next() != None { ast_error_result()? }
 
-    Ok(Lambda { argument: make_identifier(ident)?, body: make_application(expr)? })
+    Ok(Lambda {
+        argument: make_identifier(ident)?,
+        body: make_application(expr)?,
+        data: ()
+    })
 }
 
 pub fn make_parenthesis(pair: Pair<'_>) -> Result<Application<'_>, Error> {
@@ -75,7 +79,16 @@ pub fn make_application(pair: Pair<'_>) -> Result<Application<'_>, Error> {
         .map(make_expression)
         .collect::<Result<Vec<_>, _>>()?;
 
-    Ok(Application { expressions: exprs })
+    let app = exprs.into_iter()
+        .rev()
+        .fold(None, |tail, head| Some(Box::new(Application {
+            head: Box::new(head),
+            tail,
+            data: ()
+        })))
+        .map(|e| *e);
+
+    app.ok_or_else(ast_error)
 }
 
 pub fn make_assignment(pair: Pair<'_>) -> Result<Assignment<'_>, Error> {
@@ -86,7 +99,11 @@ pub fn make_assignment(pair: Pair<'_>) -> Result<Assignment<'_>, Error> {
     let app = inner.next().ok_or_else(ast_error)?;
     if inner.next() != None { ast_error_result()? }
 
-    Ok(Assignment { target: make_identifier(ident)?, value: make_application(app)? })
+    Ok(Assignment {
+        target: make_identifier(ident)?,
+        value: make_application(app)?,
+        data: ()
+    })
 }
 
 pub fn make_program(pair: Pair<'_>) -> Result<Program<'_>, Error> {
@@ -101,7 +118,10 @@ pub fn make_program(pair: Pair<'_>) -> Result<Program<'_>, Error> {
         })
         .collect::<Result<Vec<_>, _>>()?;
 
-    Ok(Program { assignments: asss })
+    Ok(Program {
+        assignments: asss,
+        data: ()
+    })
 }
 
 pub fn from_pairs<'i, T, M>(mut pairs: Pairs<'i>, maker: M) -> Result<T, Error>

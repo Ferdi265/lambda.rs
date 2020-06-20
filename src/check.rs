@@ -90,7 +90,7 @@ pub struct CheckResult<'i> {
 pub fn check_program<'i>(program: &Program<'i>) -> CheckResult<'i> {
     let mut ctx = Context::new("");
 
-    let asss: Vec<_> = program.assignments.iter()
+    let asss: Vec<_> = program.iter()
         .map(|ass| {
             let ass = check_assignment(ass, &mut ctx);
             ctx.add_global(ass.target);
@@ -118,7 +118,7 @@ fn check_assignment<'i>(ass: &Assignment<'i>, ctx: &mut Context<'i>) -> checked:
 }
 
 fn check_application<'i>(app: &Application<'i>, ctx: &mut Context<'i>) -> checked::Application<'i> {
-    let exprs: Vec<_> = app.expressions.iter()
+    let exprs: Vec<_> = app.iter()
         .map(|expr| check_expression(expr, ctx))
         .collect();
 

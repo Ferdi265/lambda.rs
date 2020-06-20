@@ -1,37 +1,14 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AstError;
 
-pub type Identifier<'i> = &'i str;
+pub type Identifier<'i> = data::Identifier<'i>;
+pub type Lambda<'i> = data::Lambda<'i, data::NoData>;
+pub type Expression<'i> = data::Expression<'i, data::NoData>;
+pub type Application<'i> = data::Application<'i, data::NoData>;
+pub type Assignment<'i> = data::Assignment<'i, data::NoData>;
+pub type Program<'i> = data::Program<'i, data::NoData>;
 
-#[derive(Clone, PartialEq, Eq)]
-pub struct Lambda<'i> {
-    pub argument: Identifier<'i>,
-    pub body: Application<'i>
-}
-
-#[derive(Clone, PartialEq, Eq)]
-pub enum Expression<'i> {
-    Lambda(Lambda<'i>),
-    Parenthesis(Application<'i>),
-    Identifier(Identifier<'i>),
-}
-
-#[derive(Clone, PartialEq, Eq)]
-pub struct Application<'i> {
-    pub expressions: Vec<Expression<'i>>
-}
-
-#[derive(Clone, PartialEq, Eq)]
-pub struct Assignment<'i> {
-    pub target: Identifier<'i>,
-    pub value: Application<'i>
-}
-
-#[derive(Clone, PartialEq, Eq)]
-pub struct Program<'i> {
-    pub assignments: Vec<Assignment<'i>>
-}
-
+pub mod data;
 mod fmt;
 mod maker;
 pub mod checked;

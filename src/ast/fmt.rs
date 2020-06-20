@@ -1,18 +1,18 @@
-use super::*;
+use super::data::*;
 
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fmt::Result as FmtResult;
-use std::fmt::Error as FmtError;
 
-impl<'i> Display for Lambda<'i> {
+impl<D: ASTData> Display for Lambda<'_, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        self.data.fmt(f)?;
         write!(f, "{} -> {}", self.argument, self.body)
     }
 }
 
-impl<'i> Display for Expression<'i> {
+impl<D: ASTData> Display for Expression<'_, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             Expression::Lambda(lambda) => write!(f, "{}", lambda),
@@ -22,32 +22,30 @@ impl<'i> Display for Expression<'i> {
     }
 }
 
-impl<'i> Display for Application<'i> {
+impl<D: ASTData> Display for Application<'_, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        let mut iter = self.expressions.iter();
+        self.data.fmt(f)?;
+        write!(f, "{}", self.head)?;
 
-        if let Some(expr) = iter.next() {
-            write!(f, "{}", expr)?;
+        if let Some(tail) = &self.tail {
+            write!(f, " {}", tail)
         } else {
-            return Err(FmtError);
+            Ok(())
         }
-
-        for expr in iter {
-            write!(f, " {}", expr)?;
-        }
-
-        Ok(())
     }
 }
 
-impl<'i> Display for Assignment<'i> {
+impl<D: ASTData> Display for Assignment<'_, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        self.data.fmt(f)?;
         write!(f, "{} = {}", self.target, self.value)
     }
 }
 
-impl<'i> Display for Program<'i> {
+impl<D: ASTData> Display for Program<'_, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        self.data.fmt(f)?;
+
         for ass in self.assignments.iter() {
             writeln!(f, "{}", ass)?;
         }
@@ -56,31 +54,31 @@ impl<'i> Display for Program<'i> {
     }
 }
 
-impl<'i> Debug for Lambda<'i> {
+impl<D: ASTData> Debug for Lambda<'_, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "AST({})", self)
     }
 }
 
-impl<'i> Debug for Expression<'i> {
+impl<D: ASTData> Debug for Expression<'_, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "AST({})", self)
     }
 }
 
-impl<'i> Debug for Application<'i> {
+impl<D: ASTData> Debug for Application<'_, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "AST({})", self)
     }
 }
 
-impl<'i> Debug for Assignment<'i> {
+impl<D: ASTData> Debug for Assignment<'_, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "AST({})", self)
     }
 }
 
-impl<'i> Debug for Program<'i> {
+impl<D: ASTData> Debug for Program<'_, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "AST({})", self)
     }
