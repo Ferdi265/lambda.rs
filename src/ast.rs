@@ -1,7 +1,7 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AstError;
 
-pub type Identifier<'i> = data::Identifier<'i>;
+pub use data::Identifier;
 pub type Lambda<'i> = data::Lambda<'i, data::NoData>;
 pub type Expression<'i> = data::Expression<'i, data::NoData>;
 pub type Application<'i> = data::Application<'i, data::NoData>;

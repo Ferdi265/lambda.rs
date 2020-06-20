@@ -44,7 +44,7 @@ fn generate_expression(expr: &Expression<'_>) -> String {
 }
 
 fn generate_application(app: &Application<'_>) -> String {
-    let mut iter = app.expressions.iter();
+    let mut iter = app.iter();
     let mut res = String::new();
 
     if let Some(expr) = iter.next() {
@@ -66,7 +66,7 @@ impl CodegenTarget for Lua {
     fn generate(&self, program: &Program<'_>) -> String {
         let mut res = String::new();
 
-        for ass in program.assignments.iter() {
+        for ass in program.iter() {
             res += &format!("{}\n", generate_assignment(ass));
         }
 

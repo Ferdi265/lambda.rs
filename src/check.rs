@@ -99,7 +99,7 @@ pub fn check_program<'i>(program: &Program<'i>) -> CheckResult<'i> {
         .collect();
 
     CheckResult {
-        program: checked::Program { assignments: asss },
+        program: checked::Program { assignments: asss, data: () },
         diagnostics: ctx.diagnostics
     }
 }
@@ -113,17 +113,20 @@ fn check_assignment<'i>(ass: &Assignment<'i>, ctx: &mut Context<'i>) -> checked:
 
     checked::Assignment {
         target: ass.target,
-        value: check_application(&ass.value, ctx)
+        value: check_application(&ass.value, ctx),
+        data: ()
     }
 }
 
 fn check_application<'i>(app: &Application<'i>, ctx: &mut Context<'i>) -> checked::Application<'i> {
-    let exprs: Vec<_> = app.iter()
-        .map(|expr| check_expression(expr, ctx))
-        .collect();
+    let head = Box::new(check_expression(&app.head, ctx));
+    let tail = app.tail.as_ref()
+        .map(|tail| Box::new(check_application(&tail, ctx)));
 
     checked::Application {
-        expressions: exprs
+        head,
+        tail,
+        data: ()
     }
 }
 
@@ -166,9 +169,11 @@ fn check_lambda<'i>(lambda: &Lambda<'i>, ctx: &mut Context<'i>) -> checked::Lamb
     ctx.merge(subctx);
 
     checked::Lambda {
-        id,
         argument: lambda.argument,
         body,
-        captures
+        data: checked::LambdaData {
+            id,
+            captures
+        }
     }
 }

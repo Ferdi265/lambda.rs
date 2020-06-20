@@ -1,34 +1,22 @@
 use std::collections::BTreeSet;
+use super::data;
 
-pub use super::Identifier;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Lambda<'i> {
+#[derive(Debug, Clone)]
+pub struct LambdaData<'i> {
     pub id: usize,
-    pub argument: Identifier<'i>,
-    pub body: Application<'i>,
     pub captures: BTreeSet<Identifier<'i>>
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Expression<'i> {
-    Lambda(Lambda<'i>),
-    Parenthesis(Application<'i>),
-    Identifier(Identifier<'i>),
+#[derive(Debug, Clone, Copy)]
+pub struct CheckData;
+
+impl<'i> data::ASTData<'i> for CheckData {
+    type LambdaData = LambdaData<'i>;
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Application<'i> {
-    pub expressions: Vec<Expression<'i>>
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Assignment<'i> {
-    pub target: Identifier<'i>,
-    pub value: Application<'i>
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Program<'i> {
-    pub assignments: Vec<Assignment<'i>>
-}
+pub use data::Identifier;
+pub type Lambda<'i> = data::Lambda<'i, CheckData>;
+pub type Expression<'i> = data::Expression<'i, CheckData>;
+pub type Application<'i> = data::Application<'i, CheckData>;
+pub type Assignment<'i> = data::Assignment<'i, CheckData>;
+pub type Program<'i> = data::Program<'i, CheckData>;
