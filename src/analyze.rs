@@ -3,6 +3,7 @@ use crate::ast::nodata;
 pub mod compute_lambda_captures;
 pub mod compute_continuations;
 pub mod compute_continuation_captures;
+pub mod strip_data;
 
 pub use compute_continuation_captures::Literal;
 pub use compute_continuation_captures::Continuation;

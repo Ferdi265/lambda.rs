@@ -8,6 +8,7 @@ use structopt::StructOpt;
 use lambda::error::Error;
 use lambda::parser::LambdaParser;
 use lambda::analyze::analyze_program;
+use lambda::analyze::strip_data;
 use lambda::codegen::*;
 
 #[derive(StructOpt)]
@@ -79,9 +80,11 @@ fn main() -> Result<(), String> {
         println!("{}", diagnostic);
     }
 
+    let stripped = strip_data::transform_program(&analyze_result.program);
+
     match opt {
         Options::Check { .. } => {}
-        Options::Pretty { .. } => print!("{}", parsed),
+        Options::Pretty { .. } => print!("{}", stripped),
         Options::Codegen { target, .. } => print!("{}", target.generate(&analyze_result.program))
     }
 
