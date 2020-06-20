@@ -1,9 +1,21 @@
-use super::data::*;
+use super::generic::*;
 
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fmt::Result as FmtResult;
+
+impl<T: Debug> DataDisplay for T {
+    default fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "[data = {:?}] ", self)
+    }
+}
+
+impl DataDisplay for () {
+    fn fmt(&self, _: &mut Formatter<'_>) -> FmtResult {
+        Ok(())
+    }
+}
 
 impl<'i, D: ASTData<'i>> Display for Lambda<'i, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {

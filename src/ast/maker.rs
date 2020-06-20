@@ -1,4 +1,6 @@
-use super::*;
+use std::rc::Rc;
+
+use super::nodata::*;
 
 use crate::error::Error;
 use crate::parser::Rule;
@@ -8,8 +10,11 @@ use crate::parser::Pairs;
 pub trait Maker<'i, T>: FnOnce(Pair<'i>) -> Result<T, Error> {}
 impl<'i, T, F> Maker<'i, T> for F where F: FnOnce(Pair<'i>) -> Result<T, Error> {}
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AstMakeError;
+
 fn ast_error() -> Error {
-    Error::AstError(AstError)
+    Error::AstMakeError(AstMakeError)
 }
 
 fn ast_error_result<T>() -> Result<T, Error> {
@@ -32,7 +37,7 @@ pub fn make_identifier(pair: Pair<'_>) -> Result<Identifier<'_>, Error> {
     Ok(ident)
 }
 
-pub fn make_lambda(pair: Pair<'_>) -> Result<Lambda<'_>, Error> {
+pub fn make_rc_lambda(pair: Pair<'_>) -> Result<Rc<Lambda<'_>>, Error> {
     ensure_rule(&pair, Rule::lambda)?;
 
     let mut inner = pair.into_inner();
@@ -40,21 +45,29 @@ pub fn make_lambda(pair: Pair<'_>) -> Result<Lambda<'_>, Error> {
     let expr = inner.next().ok_or_else(ast_error)?;
     if inner.next() != None { ast_error_result()? }
 
-    Ok(Lambda {
+    Ok(Rc::new(Lambda {
         argument: make_identifier(ident)?,
-        body: make_application(expr)?,
+        body: make_rc_application(expr)?,
         data: ()
-    })
+    }))
 }
 
-pub fn make_parenthesis(pair: Pair<'_>) -> Result<Application<'_>, Error> {
+pub fn make_lambda(pair: Pair<'_>) -> Result<Lambda<'_>, Error> {
+    make_rc_lambda(pair).map(|app| app.as_ref().clone())
+}
+
+pub fn make_rc_parenthesis(pair: Pair<'_>) -> Result<Rc<Application<'_>>, Error> {
     ensure_rule(&pair, Rule::parenthesis)?;
 
     let mut inner = pair.into_inner();
     let app = inner.next().ok_or_else(ast_error)?;
     if inner.next() != None { ast_error_result()? }
 
-    make_application(app)
+    make_rc_application(app)
+}
+
+pub fn make_parenthesis(pair: Pair<'_>) -> Result<Application<'_>, Error> {
+    make_rc_parenthesis(pair).map(|app| app.as_ref().clone())
 }
 
 pub fn make_expression(pair: Pair<'_>) -> Result<Expression<'_>, Error> {
@@ -65,14 +78,14 @@ pub fn make_expression(pair: Pair<'_>) -> Result<Expression<'_>, Error> {
     if inner.next() != None { ast_error_result()? }
 
     match expr.as_rule() {
-        Rule::lambda => make_lambda(expr).map(Expression::Lambda),
-        Rule::parenthesis => make_parenthesis(expr).map(Expression::Parenthesis),
+        Rule::lambda => make_rc_lambda(expr).map(Expression::Lambda),
+        Rule::parenthesis => make_rc_parenthesis(expr).map(Expression::Parenthesis),
         Rule::identifier => make_identifier(expr).map(Expression::Identifier),
         _ => ast_error_result()
     }
 }
 
-pub fn make_application(pair: Pair<'_>) -> Result<Application<'_>, Error> {
+pub fn make_rc_application(pair: Pair<'_>) -> Result<Rc<Application<'_>>, Error> {
     ensure_rule(&pair, Rule::application)?;
 
     let exprs: Vec<_> = pair.into_inner()
@@ -81,14 +94,17 @@ pub fn make_application(pair: Pair<'_>) -> Result<Application<'_>, Error> {
 
     let app = exprs.into_iter()
         .rev()
-        .fold(None, |tail, head| Some(Box::new(Application {
-            head: Box::new(head),
+        .fold(None, |tail, head| Some(Rc::new(Application {
+            head,
             tail,
             data: ()
-        })))
-        .map(|e| *e);
+        })));
 
     app.ok_or_else(ast_error)
+}
+
+pub fn make_application(pair: Pair<'_>) -> Result<Application<'_>, Error> {
+    make_rc_application(pair).map(|app| app.as_ref().clone())
 }
 
 pub fn make_assignment(pair: Pair<'_>) -> Result<Assignment<'_>, Error> {
@@ -101,7 +117,7 @@ pub fn make_assignment(pair: Pair<'_>) -> Result<Assignment<'_>, Error> {
 
     Ok(Assignment {
         target: make_identifier(ident)?,
-        value: make_application(app)?,
+        value: make_rc_application(app)?,
         data: ()
     })
 }

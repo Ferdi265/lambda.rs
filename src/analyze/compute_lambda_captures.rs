@@ -1,7 +1,28 @@
+use std::rc::Rc;
 use std::collections::BTreeSet;
 
-use crate::ast::*;
-use crate::ast::checked;
+use crate::ast::generic;
+use crate::ast::nodata as prev;
+
+#[derive(Debug, Clone)]
+pub struct LambdaData<'i> {
+    pub id: usize,
+    pub captures: BTreeSet<Identifier<'i>>
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct PassData;
+
+impl<'i> generic::ASTData<'i> for PassData {
+    type LambdaData = LambdaData<'i>;
+}
+
+pub use generic::Identifier;
+pub type Lambda<'i> = generic::Lambda<'i, PassData>;
+pub type Expression<'i> = generic::Expression<'i, PassData>;
+pub type Application<'i> = generic::Application<'i, PassData>;
+pub type Assignment<'i> = generic::Assignment<'i, PassData>;
+pub type Program<'i> = generic::Program<'i, PassData>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Context<'i> {
@@ -82,57 +103,57 @@ impl<'i> Context<'i> {
 }
 
 #[derive(Debug, Clone)]
-pub struct CheckResult<'i> {
-    pub program: checked::Program<'i>,
+pub struct PassResult<'i> {
+    pub program: Program<'i>,
     pub diagnostics: Vec<String>
 }
 
-pub fn check_program<'i>(program: &Program<'i>) -> CheckResult<'i> {
+pub fn transform_program<'i>(program: &prev::Program<'i>) -> PassResult<'i> {
     let mut ctx = Context::new("");
 
     let asss: Vec<_> = program.iter()
         .map(|ass| {
-            let ass = check_assignment(ass, &mut ctx);
+            let ass = transform_assignment(ass, &mut ctx);
             ctx.add_global(ass.target);
             ass
         })
         .collect();
 
-    CheckResult {
-        program: checked::Program { assignments: asss, data: () },
+    PassResult {
+        program: Program { assignments: asss, data: () },
         diagnostics: ctx.diagnostics
     }
 }
 
-fn check_assignment<'i>(ass: &Assignment<'i>, ctx: &mut Context<'i>) -> checked::Assignment<'i> {
+fn transform_assignment<'i>(ass: &prev::Assignment<'i>, ctx: &mut Context<'i>) -> Assignment<'i> {
     if ctx.contains(ass.target) {
         ctx.add_diagnostic("error", format!("redefinition of '{}'", ass.target));
     }
 
     ctx.set_assignment(ass.target);
 
-    checked::Assignment {
+    Assignment {
         target: ass.target,
-        value: check_application(&ass.value, ctx),
+        value: transform_application(&ass.value, ctx),
         data: ()
     }
 }
 
-fn check_application<'i>(app: &Application<'i>, ctx: &mut Context<'i>) -> checked::Application<'i> {
-    let head = Box::new(check_expression(&app.head, ctx));
+fn transform_application<'i>(app: &prev::Application<'i>, ctx: &mut Context<'i>) -> Rc<Application<'i>> {
+    let head = transform_expression(&app.head, ctx);
     let tail = app.tail.as_ref()
-        .map(|tail| Box::new(check_application(&tail, ctx)));
+        .map(|tail| transform_application(&tail, ctx));
 
-    checked::Application {
+    Rc::new(Application {
         head,
         tail,
         data: ()
-    }
+    })
 }
 
-fn check_expression<'i>(expr: &Expression<'i>, ctx: &mut Context<'i>) -> checked::Expression<'i> {
+fn transform_expression<'i>(expr: &prev::Expression<'i>, ctx: &mut Context<'i>) -> Expression<'i> {
     match expr {
-        Expression::Identifier(ident) => {
+        prev::Expression::Identifier(ident) => {
             ctx.add_referenced(ident);
 
             if !ctx.contains(ident) {
@@ -149,18 +170,18 @@ fn check_expression<'i>(expr: &Expression<'i>, ctx: &mut Context<'i>) -> checked
                 }
             }
 
-            checked::Expression::Identifier(ident)
+            Expression::Identifier(ident)
         },
-        Expression::Parenthesis(app) => checked::Expression::Parenthesis(check_application(app, ctx)),
-        Expression::Lambda(lambda) => checked::Expression::Lambda(check_lambda(lambda, ctx))
+        prev::Expression::Parenthesis(app) => Expression::Parenthesis(transform_application(app, ctx)),
+        prev::Expression::Lambda(lambda) => Expression::Lambda(transform_lambda(lambda, ctx))
     }
 }
 
-fn check_lambda<'i>(lambda: &Lambda<'i>, ctx: &mut Context<'i>) -> checked::Lambda<'i> {
+fn transform_lambda<'i>(lambda: &prev::Lambda<'i>, ctx: &mut Context<'i>) -> Rc<Lambda<'i>> {
     let id = ctx.get_id();
     let mut subctx = ctx.split_with_local(lambda.argument);
 
-    let body = check_application(&lambda.body, &mut subctx);
+    let body = transform_application(&lambda.body, &mut subctx);
 
     subctx.referenced.remove(lambda.argument);
     let captures: BTreeSet<_> = subctx.referenced.intersection(&ctx.locals)
@@ -168,12 +189,12 @@ fn check_lambda<'i>(lambda: &Lambda<'i>, ctx: &mut Context<'i>) -> checked::Lamb
 
     ctx.merge(subctx);
 
-    checked::Lambda {
+    Rc::new(Lambda {
         argument: lambda.argument,
         body,
-        data: checked::LambdaData {
+        data: LambdaData {
             id,
             captures
         }
-    }
+    })
 }

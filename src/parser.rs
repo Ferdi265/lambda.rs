@@ -5,7 +5,8 @@ use pest::error::Error as PestError;
 use pest_derive::Parser;
 
 use crate::error::Error;
-use crate::ast::*;
+use crate::ast::nodata::*;
+use crate::ast::maker::*;
 
 #[derive(Parser)]
 #[grammar = "lambda.pest"]

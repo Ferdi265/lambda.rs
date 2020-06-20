@@ -7,7 +7,7 @@ use structopt::StructOpt;
 
 use lambda::error::Error;
 use lambda::parser::LambdaParser;
-use lambda::check::check_program;
+use lambda::analyze::analyze_program;
 use lambda::codegen::*;
 
 #[derive(StructOpt)]
@@ -71,18 +71,18 @@ fn main() -> Result<(), String> {
             eprintln!("\n{}", e);
             return Err(String::from("failed to parse program"));
         }
-        Err(Error::AstError(_)) => return Err(String::from("failed to build AST"))
+        Err(Error::AstMakeError(_)) => return Err(String::from("failed to build AST"))
     };
 
-    let check_result = check_program(&parsed);
-    for diagnostic in check_result.diagnostics {
+    let analyze_result = analyze_program(&parsed);
+    for diagnostic in analyze_result.diagnostics {
         println!("{}", diagnostic);
     }
 
     match opt {
         Options::Check { .. } => {}
         Options::Pretty { .. } => print!("{}", parsed),
-        Options::Codegen { target, .. } => print!("{}", target.generate(&check_result.program))
+        Options::Codegen { target, .. } => print!("{}", target.generate(&analyze_result.program))
     }
 
     Ok(())

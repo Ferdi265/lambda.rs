@@ -1,4 +1,4 @@
-use crate::ast::checked::*;
+use crate::analyze::*;
 
 pub trait CodegenTarget {
     fn generate(&self, program: &Program<'_>) -> String;
