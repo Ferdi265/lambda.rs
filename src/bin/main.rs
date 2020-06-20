@@ -23,6 +23,10 @@ enum Options {
         #[structopt(parse(from_os_str))]
         file: PathBuf,
     },
+    Debug {
+        #[structopt(parse(from_os_str))]
+        file: PathBuf,
+    },
     Codegen {
         #[structopt(parse(from_os_str))]
         file: PathBuf,
@@ -60,6 +64,7 @@ fn main() -> Result<(), String> {
     let file = match &opt {
         Options::Check { file, .. } => file,
         Options::Pretty { file, .. } => file,
+        Options::Debug { file, .. } => file,
         Options::Codegen { file, .. } => file
     };
 
@@ -85,6 +90,7 @@ fn main() -> Result<(), String> {
     match opt {
         Options::Check { .. } => {}
         Options::Pretty { .. } => print!("{}", stripped),
+        Options::Debug { .. } => println!("{:#?}", analyze_result.program),
         Options::Codegen { target, .. } => print!("{}", target.generate(&analyze_result.program))
     }
 
