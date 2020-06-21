@@ -335,7 +335,7 @@ fn generate_implementation<'i>(imp: Implementation<'i, '_>, actx: &mut Assignmen
 }
 
 fn generate_implementation_chain<'i>(chain: ImplementationChain<'i, '_>, actx: &mut AssignmentContext<'i>, ictx: &mut ImplementationContext<'i>) -> String {
-    let mut arg_name = match chain.arg_name {
+    let first_arg_name = match chain.arg_name {
         None => ArgName::Unnamed,
         Some(ident) => ArgName::Identifier(ident)
     };
@@ -344,7 +344,7 @@ fn generate_implementation_chain<'i>(chain: ImplementationChain<'i, '_>, actx: &
     if chain.continuations.is_empty() {
         generate_implementation(Implementation {
             id: 0,
-            arg_name,
+            arg_name: first_arg_name,
             function: None,
             argument: &chain.result_literal,
             captures: chain.captures,
@@ -353,6 +353,12 @@ fn generate_implementation_chain<'i>(chain: ImplementationChain<'i, '_>, actx: &
         }, actx);
     } else {
         for cont in chain.continuations.iter().rev() {
+            let arg_name = if cont.id == 0 {
+                first_arg_name
+            } else {
+                ArgName::Anonymous(cont.id - 1)
+            };
+
             generate_implementation(Implementation {
                 id: cont.id,
                 arg_name,
@@ -363,7 +369,6 @@ fn generate_implementation_chain<'i>(chain: ImplementationChain<'i, '_>, actx: &
                 next
             }, actx);
 
-            arg_name = ArgName::Anonymous(cont.id);
             next = Some(cont);
         }
     }
