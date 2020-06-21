@@ -414,13 +414,13 @@ fn generate_assignment(ass: &Assignment<'_>) -> String {
         lambda + "->ret()"
     };
 
-    let mut res = String::new();
+    let mut res = String::from("\n");
 
     for imp in actx.impls {
         res += &format!("{}\n", imp);
     }
 
-    res + &format!("Lambda* {} = {};\n\n", target, value)
+    res + &format!("Lambda* {} = {};\n", target, value)
 }
 
 impl CodegenTarget for CPlusPlusCPS {
