@@ -43,6 +43,7 @@ impl FromStr for Target {
     fn from_str(target: &str) -> Result<Target, Self::Err> {
         Ok(Target(match target {
             "c++" | "cplusplus" | "cxx" | "cpp" => Box::new(CPlusPlus),
+            "c++-cps" | "cplusplus-cps" | "cxx-cps" | "cpp-cps" => Box::new(CPlusPlusCPS),
             "javascript" | "js" => Box::new(JavaScript),
             "lua" => Box::new(Lua),
             "python" | "py" => Box::new(Python),
