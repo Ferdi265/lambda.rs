@@ -54,25 +54,28 @@ pub type Program<'i> = generic::Program<'i, PassData>;
 struct PrevApplicationData<'i, 'a> {
     continuations: &'a [prev::Continuation<'i>],
     result_literal: prev::Literal<'i>,
+    argument: Option<Identifier<'i>>,
     captures: BTreeSet<Identifier<'i>>
 }
 
-impl<'a, 'i> From<&'a prev::AssignmentData<'i>> for PrevApplicationData<'i, 'a> {
-    fn from(ass: &'a prev::AssignmentData<'i>) -> Self {
+impl<'a, 'i> PrevApplicationData<'i, 'a> {
+    fn from_assignment(ass: &'a prev::Assignment<'i>) -> Self {
         PrevApplicationData {
-            continuations: &ass.continuations,
-            result_literal: ass.result_literal.clone(),
+            continuations: &ass.data.continuations,
+            result_literal: ass.data.result_literal.clone(),
+            argument: None,
             captures: BTreeSet::new()
         }
     }
 }
 
-impl<'a, 'i> From<&'a prev::LambdaData<'i>> for PrevApplicationData<'i, 'a> {
-    fn from(lambda: &'a prev::LambdaData<'i>) -> Self {
+impl<'a, 'i> PrevApplicationData<'i, 'a> {
+    fn from_lambda(lambda: &'a prev::Lambda<'i>) -> Self {
         PrevApplicationData {
-            continuations: &lambda.continuations,
-            result_literal: lambda.result_literal.clone(),
-            captures: lambda.captures.clone()
+            continuations: &lambda.data.continuations,
+            result_literal: lambda.data.result_literal.clone(),
+            argument: Some(lambda.argument),
+            captures: lambda.data.captures.clone()
         }
     }
 }
@@ -104,7 +107,9 @@ pub fn transform_program<'i>(program: &prev::Program<'i>) -> Program<'i> {
 }
 
 fn transform_assignment<'i>(ass: &prev::Assignment<'i>) -> Assignment<'i> {
-    let (value, continuations, lit) = transform_continuations(&ass.value, PrevApplicationData::from(&ass.data));
+    let (value, continuations, lit) = transform_continuations(
+        &ass.value, PrevApplicationData::from_assignment(ass)
+    );
 
     Assignment {
         target: ass.target,
@@ -136,8 +141,14 @@ fn transform_continuations<'i>(app: &prev::Application<'i>, data: PrevApplicatio
             cur.anonymous_captures.remove(&cur.id);
         }
 
-        compute_literal_captures(cur.function.clone(), cur, &data.captures);
-        compute_literal_captures(cur.argument.clone(), cur, &data.captures);
+        compute_literal_captures(cur.function.clone(), cur, &data);
+        compute_literal_captures(cur.argument.clone(), cur, &data);
+
+        if cur.id == 0 {
+            if let Some(arg) = data.argument {
+                cur.captures.remove(arg);
+            }
+        }
 
         next = Some(cur);
     }
@@ -165,12 +176,12 @@ fn transform_literal<'i>(lit: &prev::Literal<'i>, ctx: &mut Context<'i>) -> Lite
     }
 }
 
-fn compute_literal_captures<'i>(lit: Literal<'i>, cont: &mut Continuation<'i>, cap: &BTreeSet<Identifier<'i>>) {
+fn compute_literal_captures<'i>(lit: Literal<'i>, cont: &mut Continuation<'i>, data: &PrevApplicationData<'i, '_>) {
     match lit {
         Literal::Anonymous(id) => if id != cont.id - 1 {
             cont.anonymous_captures.insert(id);
         }
-        Literal::Identifier(ident) => if cap.contains(ident) {
+        Literal::Identifier(ident) => if data.captures.contains(ident) || Some(ident) == data.argument {
             cont.captures.insert(ident);
         }
         Literal::Lambda(lambda) => {
@@ -197,7 +208,9 @@ fn transform_expression<'i>(expr: &prev::Expression<'i>, ctx: &mut Context<'i>) 
 }
 
 fn transform_lambda<'i>(lambda: &prev::Lambda<'i>, ctx: &mut Context<'i>) -> Rc<Lambda<'i>> {
-    let (body, continuations, lit) = transform_continuations(&lambda.body, PrevApplicationData::from(&lambda.data));
+    let (body, continuations, lit) = transform_continuations(
+        &lambda.body, PrevApplicationData::from_lambda(lambda)
+    );
 
     let lambda = Rc::new(Lambda {
         argument: lambda.argument,
