@@ -21,6 +21,7 @@ pub struct GenericContinuation<'i, D: generic::ASTData<'i>> {
 #[derive(Debug, Clone)]
 pub struct GenericAssignmentData<'i, D: generic::ASTData<'i>> {
     pub continuations: Vec<GenericContinuation<'i, D>>,
+    pub result_literal: Literal<'i>
 }
 
 #[derive(Debug, Clone)]
@@ -28,6 +29,7 @@ pub struct GenericLambdaData<'i, D: generic::ASTData<'i>> {
     pub id: usize,
     pub captures: BTreeSet<Identifier<'i>>,
     pub continuations: Vec<GenericContinuation<'i, D>>,
+    pub result_literal: Literal<'i>
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -88,25 +90,26 @@ pub fn transform_program<'i>(program: &prev::Program<'i>) -> Program<'i> {
 }
 
 fn transform_assignment<'i>(ass: &prev::Assignment<'i>) -> Assignment<'i> {
-    let (value, continuations) = transform_application(&ass.value);
+    let (value, continuations, lit) = transform_application(&ass.value);
 
     Assignment {
         target: ass.target,
         value,
         data: AssignmentData {
-            continuations
+            continuations,
+            result_literal: lit
         }
     }
 }
 
 fn transform_application<'i>(app: &prev::Application<'i>)
-    -> (Rc<Application<'i>>, Vec<Continuation<'i>>)
+    -> (Rc<Application<'i>>, Vec<Continuation<'i>>, Literal<'i>)
 {
     let mut ctx = Context::new();
 
-    let (app, _) = transform_application_initial(app, &mut ctx, |_, lit| lit);
+    let (app, lit) = transform_application_initial(app, &mut ctx, |_, lit| lit);
 
-    (app, ctx.continuations)
+    (app, ctx.continuations, lit)
 }
 
 fn transform_application_initial<'i, F>(app: &prev::Application<'i>, ctx: &mut Context<'i>, f: F)
@@ -161,7 +164,7 @@ fn transform_expression<'i>(expr: &prev::Expression<'i>, ctx: &mut Context<'i>)
 }
 
 fn transform_lambda<'i>(lambda: &prev::Lambda<'i>) -> Rc<Lambda<'i>> {
-    let (body, continuations) = transform_application(&lambda.body);
+    let (body, continuations, lit) = transform_application(&lambda.body);
 
     Rc::new(Lambda {
         argument: lambda.argument,
@@ -169,7 +172,8 @@ fn transform_lambda<'i>(lambda: &prev::Lambda<'i>) -> Rc<Lambda<'i>> {
         data: LambdaData {
             id: lambda.data.id,
             captures: lambda.data.captures.clone(),
-            continuations
+            continuations,
+            result_literal: lit
         }
     })
 }

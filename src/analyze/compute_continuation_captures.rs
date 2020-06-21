@@ -19,6 +19,7 @@ pub struct GenericContinuation<'i, D: generic::ASTData<'i>> {
 #[derive(Debug, Clone)]
 pub struct GenericAssignmentData<'i, D: generic::ASTData<'i>> {
     pub continuations: Vec<GenericContinuation<'i, D>>,
+    pub result_literal: Literal<'i>
 }
 
 #[derive(Debug, Clone)]
@@ -26,6 +27,7 @@ pub struct GenericLambdaData<'i, D: generic::ASTData<'i>> {
     pub id: usize,
     pub captures: BTreeSet<Identifier<'i>>,
     pub continuations: Vec<GenericContinuation<'i, D>>,
+    pub result_literal: Literal<'i>
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -75,19 +77,24 @@ pub fn transform_program<'i>(program: &prev::Program<'i>) -> Program<'i> {
 }
 
 fn transform_assignment<'i>(ass: &prev::Assignment<'i>) -> Assignment<'i> {
-    let (value, continuations) = transform_continuations(&ass.value, &ass.data.continuations);
+    let (value, continuations, lit) = transform_continuations(
+        &ass.value, &ass.data.continuations, &ass.data.result_literal
+    );
 
     Assignment {
         target: ass.target,
         value,
         data: AssignmentData {
-            continuations
+            continuations,
+            result_literal: lit
         }
     }
 }
 
-fn transform_continuations<'i>(app: &prev::Application<'i>, continuations: &[prev::Continuation<'i>])
-    -> (Rc<Application<'i>>, Vec<Continuation<'i>>)
+fn transform_continuations<'i>(
+    app: &prev::Application<'i>, continuations: &[prev::Continuation<'i>], result_literal: &prev::Literal<'i>
+)
+    -> (Rc<Application<'i>>, Vec<Continuation<'i>>, Literal<'i>)
 {
     let mut ctx = Context::new();
     let app = transform_application(app, &mut ctx);
@@ -95,6 +102,8 @@ fn transform_continuations<'i>(app: &prev::Application<'i>, continuations: &[pre
     let mut continuations: Vec<_> = continuations.iter()
         .map(|cont| transform_continuation(cont, &mut ctx))
         .collect();
+
+    let lit = tranform_literal(result_literal, &mut ctx);
 
     let mut next: Option<&Continuation<'i>> = None;
     for cur in continuations.iter_mut().rev() {
@@ -115,7 +124,7 @@ fn transform_continuations<'i>(app: &prev::Application<'i>, continuations: &[pre
         next = Some(cur);
     }
 
-    (app, continuations)
+    (app, continuations, lit)
 }
 
 fn transform_continuation<'i>(cont: &prev::Continuation<'i>, ctx: &mut Context<'i>) -> Continuation<'i> {
@@ -156,7 +165,9 @@ fn transform_expression<'i>(expr: &prev::Expression<'i>, ctx: &mut Context<'i>) 
 }
 
 fn transform_lambda<'i>(lambda: &prev::Lambda<'i>, ctx: &mut Context<'i>) -> Rc<Lambda<'i>> {
-    let (body, continuations) = transform_continuations(&lambda.body, &lambda.data.continuations);
+    let (body, continuations, lit) = transform_continuations(
+        &lambda.body, &lambda.data.continuations, &lambda.data.result_literal
+    );
 
     let lambda = Rc::new(Lambda {
         argument: lambda.argument,
@@ -164,7 +175,8 @@ fn transform_lambda<'i>(lambda: &prev::Lambda<'i>, ctx: &mut Context<'i>) -> Rc<
         data: LambdaData {
             id: lambda.data.id,
             captures: lambda.data.captures.clone(),
-            continuations
+            continuations,
+            result_literal: lit
         }
     });
 
