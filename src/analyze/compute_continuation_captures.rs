@@ -167,7 +167,7 @@ fn transform_literal<'i>(lit: &prev::Literal<'i>, ctx: &mut Context<'i>) -> Lite
 
 fn compute_literal_captures<'i>(lit: Literal<'i>, cont: &mut Continuation<'i>, cap: &BTreeSet<Identifier<'i>>) {
     match lit {
-        Literal::Anonymous(id) => {
+        Literal::Anonymous(id) => if id != cont.id - 1 {
             cont.anonymous_captures.insert(id);
         }
         Literal::Identifier(ident) => if cap.contains(ident) {
