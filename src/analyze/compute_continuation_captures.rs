@@ -148,6 +148,8 @@ fn transform_continuations<'i>(app: &prev::Application<'i>, data: PrevApplicatio
             if let Some(arg) = data.argument {
                 cur.captures.remove(arg);
             }
+        } else {
+            cur.anonymous_captures.remove(&(cur.id - 1));
         }
 
         next = Some(cur);
@@ -178,7 +180,7 @@ fn transform_literal<'i>(lit: &prev::Literal<'i>, ctx: &mut Context<'i>) -> Lite
 
 fn compute_literal_captures<'i>(lit: Literal<'i>, cont: &mut Continuation<'i>, data: &PrevApplicationData<'i, '_>) {
     match lit {
-        Literal::Anonymous(id) => if id != cont.id - 1 {
+        Literal::Anonymous(id) => {
             cont.anonymous_captures.insert(id);
         }
         Literal::Identifier(ident) => if data.captures.contains(ident) || Some(ident) == data.argument {
