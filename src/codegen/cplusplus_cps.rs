@@ -275,8 +275,6 @@ fn generate_implementation<'i>(imp: Implementation<'i, '_>, actx: &mut Assignmen
     let cont_name = generate_cont_identifier(actx.cur_assignment, actx.cur_lambda_id, imp.id);
     let arg_name = generate_arg_name_identifier(imp.arg_name);
 
-    println!("generate_implementation: {:?}", imp);
-
     let mut res = format!("Lambda* {}(Lambda* {}, Lambda* self, Cont* cont) {{\n",
         cont_name, arg_name
     );
