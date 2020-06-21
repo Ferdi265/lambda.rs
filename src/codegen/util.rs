@@ -24,11 +24,12 @@ pub fn generate_identifier(ident: Identifier<'_>, words: &[&str]) -> String {
     }
 }
 
-pub fn generate_suffix_identifier(ident: Identifier<'_>, id: Option<usize>, words: &[&str]) -> String {
+pub fn generate_suffix_identifier(ident: Identifier<'_>, words: &[&str], suffix: Option<String>) -> String {
     let mut gen = generate_identifier(ident, words);
 
-    if let Some(id) = id {
-        gen += &format!("{}_", id);
+    if let Some(suffix) = suffix {
+        gen += &suffix;
+        gen.push('_');
     } else if is_end_underscore(ident) {
         gen.push('_');
     }
