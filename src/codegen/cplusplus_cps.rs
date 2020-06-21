@@ -297,7 +297,7 @@ fn generate_implementation<'i>(imp: Implementation<'i, '_>, actx: &mut Assignmen
         i += 1;
     }
 
-    res += &format!("    self->unref();\n");
+    res += "    self->unref();\n";
 
     if let Some(func) = func {
         let cont = next.unwrap_or_else(|| String::from("cont"));
@@ -324,7 +324,7 @@ fn generate_implementations<'i>(conts: &[Continuation<'i>], lit: &Literal<'i>, a
     };
     let mut next = None;
 
-    let (cap, anon_cap) = if conts.len() == 0 {
+    let (cap, anon_cap) = if conts.is_empty() {
         generate_implementation(Implementation {
             id: 0,
             arg_name,
@@ -373,7 +373,7 @@ fn generate_assignment(ass: &Assignment<'_>) -> String {
 
     let target = generate_identifier(ass.target);
 
-    let value = if ass.data.continuations.len() == 0 {
+    let value = if ass.data.continuations.is_empty() {
         generate_literal(&ass.data.result_literal, &mut actx, &mut ictx)
     } else {
         let lambda = generate_implementations(&ass.data.continuations, &ass.data.result_literal, None, &mut actx, &mut ictx);
@@ -384,7 +384,7 @@ fn generate_assignment(ass: &Assignment<'_>) -> String {
     let mut res = String::new();
 
     for imp in actx.impls {
-        res += &format!("{}\n\n", imp);
+        res += &format!("{}\n", imp);
     }
 
     res + &format!("Lambda* {} = {};\n\n", target, value)
