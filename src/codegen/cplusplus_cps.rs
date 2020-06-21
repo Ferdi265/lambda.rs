@@ -267,6 +267,8 @@ fn generate_implementation<'i>(imp: Implementation<'i, '_>, actx: &mut Assignmen
     let cont_name = generate_cont_identifier(actx.cur_assignment, actx.cur_lambda_id, imp.id);
     let arg_name = generate_arg_name_identifier(imp.arg_name);
 
+    println!("generate_implementation: {:?}", imp);
+
     let mut res = format!("Lambda* {}(Lambda* {}, Lambda* self, Cont* cont) {{\n",
         cont_name, arg_name
     );
@@ -279,20 +281,20 @@ fn generate_implementation<'i>(imp: Implementation<'i, '_>, actx: &mut Assignmen
 
     let mut i = 0;
 
-    for (capture, refcount) in ictx.capture_references.into_iter() {
+    let cap = ictx.capture_references.into_iter()
+        .map(|(cap, refcount)|
+             (generate_identifier(cap), refcount)
+        );
+
+    let anon_cap = ictx.anonymous_references.into_iter()
+        .map(|(cap, refcount)|
+            (generate_anonymous_identifier(cap), refcount)
+        );
+
+    for (capture, refcount) in cap.chain(anon_cap) {
         if refcount > 0 {
             res += &format!("    Lambda* {} = self->captures[{}]->ref({});\n",
-                generate_identifier(capture), i, refcount
-            );
-        }
-
-        i += 1;
-    }
-
-    for (capture, refcount) in ictx.anonymous_references.into_iter() {
-        if refcount > 0 {
-            res += &format!("    Lambda* {} = self->captures[{}]->ref({});\n",
-                generate_anonymous_identifier(capture), i, refcount
+                capture, i, refcount
             );
         }
 
