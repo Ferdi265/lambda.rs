@@ -306,6 +306,12 @@ fn generate_implementation<'i>(imp: Implementation<'i, '_>, actx: &mut Assignmen
         i += 1;
     }
 
+    if ictx.arg_references == 0 {
+        res += &format!("    {}->unref();\n", arg_name);
+    } else if ictx.arg_references > 1 {
+        res += &format!("    {}->ref({});\n", arg_name, ictx.arg_references - 1);
+    }
+
     for (capture, refcount) in ictx.global_references.into_iter() {
         if refcount > 0 {
             res += &format!("    {}->ref({});\n",
