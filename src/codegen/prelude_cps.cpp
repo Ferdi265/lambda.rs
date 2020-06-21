@@ -3,8 +3,8 @@
 #include <array>
 #include <algorithm>
 
-struct Lambda;
-struct Cont;
+class Lambda;
+class Cont;
 typedef Lambda* LambdaFn(Lambda*, Lambda*, Cont*);
 
 class Lambda {
