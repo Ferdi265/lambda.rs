@@ -102,13 +102,7 @@ impl<'i> Context<'i> {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct PassResult<'i> {
-    pub program: Program<'i>,
-    pub diagnostics: Vec<String>
-}
-
-pub fn transform_program<'i>(program: &prev::Program<'i>) -> PassResult<'i> {
+pub fn transform_program<'i>(program: &prev::Program<'i>, diagnostics: &mut Vec<String>) -> Program<'i> {
     let mut ctx = Context::new("");
 
     let asss: Vec<_> = program.iter()
@@ -119,10 +113,9 @@ pub fn transform_program<'i>(program: &prev::Program<'i>) -> PassResult<'i> {
         })
         .collect();
 
-    PassResult {
-        program: Program { assignments: asss, data: () },
-        diagnostics: ctx.diagnostics
-    }
+    diagnostics.extend(ctx.diagnostics);
+
+    Program { assignments: asss, data: () }
 }
 
 fn transform_assignment<'i>(ass: &prev::Assignment<'i>, ctx: &mut Context<'i>) -> Assignment<'i> {

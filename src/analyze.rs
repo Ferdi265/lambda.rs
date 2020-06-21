@@ -22,9 +22,9 @@ pub struct AnalysisResult<'i> {
 }
 
 pub fn analyze_program<'i>(program: &nodata::Program<'i>) -> AnalysisResult<'i> {
-    use compute_lambda_captures::PassResult;
+    let mut diagnostics = Vec::new();
 
-    let PassResult { program, diagnostics } = compute_lambda_captures::transform_program(program);
+    let program = compute_lambda_captures::transform_program(program, &mut diagnostics);
     let program = compute_continuations::transform_program(&program);
     let program = compute_continuation_captures::transform_program(&program);
 
