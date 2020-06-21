@@ -131,6 +131,14 @@ struct Implementation<'i, 'a> {
     next: Option<&'a Continuation<'i>>
 }
 
+#[derive(Debug)]
+struct ImplementationChain<'i, 'a> {
+    arg_name: Option<Identifier<'i>>,
+    continuations: &'a [Continuation<'i>],
+    result_literal: &'a Literal<'i>,
+    captures: &'a BTreeSet<Identifier<'i>>
+}
+
 struct AssignmentContext<'i> {
     cur_assignment: Identifier<'i>,
     cur_lambda_id: Option<usize>,
@@ -138,10 +146,10 @@ struct AssignmentContext<'i> {
 }
 
 impl<'i> AssignmentContext<'i> {
-    fn new(ass: Identifier<'i>) -> Self {
+    fn new(cur_assignment: Identifier<'i>, cur_lambda_id: Option<usize>) -> Self {
         AssignmentContext {
-            cur_assignment: ass,
-            cur_lambda_id: None,
+            cur_assignment,
+            cur_lambda_id,
             impls: Vec::new()
         }
     }
@@ -326,30 +334,25 @@ fn generate_implementation<'i>(imp: Implementation<'i, '_>, actx: &mut Assignmen
     actx.add_impl(res);
 }
 
-fn generate_implementations<'i>(conts: &[Continuation<'i>], lit: &Literal<'i>, arg_name: Option<Identifier<'i>>, actx: &mut AssignmentContext<'i>, ictx: &mut ImplementationContext<'i>) -> String {
-    let empty_captures = BTreeSet::new();
-    let empty_anonymous_captures = BTreeSet::new();
-
-    let mut arg_name = match arg_name {
+fn generate_implementation_chain<'i>(chain: ImplementationChain<'i, '_>, actx: &mut AssignmentContext<'i>, ictx: &mut ImplementationContext<'i>) -> String {
+    let mut arg_name = match chain.arg_name {
         None => ArgName::Unnamed,
         Some(ident) => ArgName::Identifier(ident)
     };
     let mut next = None;
 
-    let (cap, anon_cap) = if conts.is_empty() {
+    if chain.continuations.is_empty() {
         generate_implementation(Implementation {
             id: 0,
             arg_name,
             function: None,
-            argument: &lit,
-            captures: &empty_captures,
-            anonymous_captures: &empty_anonymous_captures,
+            argument: &chain.result_literal,
+            captures: chain.captures,
+            anonymous_captures: &BTreeSet::new(),
             next
         }, actx);
-
-        (&empty_captures, &empty_anonymous_captures)
     } else {
-        for cont in conts.iter().rev() {
+        for cont in chain.continuations.iter().rev() {
             generate_implementation(Implementation {
                 id: cont.id,
                 arg_name,
@@ -363,24 +366,33 @@ fn generate_implementations<'i>(conts: &[Continuation<'i>], lit: &Literal<'i>, a
             arg_name = ArgName::Anonymous(cont.id);
             next = Some(cont);
         }
-
-        (&conts[0].captures, &conts[0].anonymous_captures)
-    };
+    }
 
     let lambda_name = generate_cont_identifier(actx.cur_assignment, actx.cur_lambda_id, 0);
-    let n = cap.len() + anon_cap.len();
+    let n = chain.captures.len();
 
-    format!("Lambda::mk<{}>({}, {})", n, lambda_name, generate_captures(cap, anon_cap, ictx))
+    format!("Lambda::mk<{}>({}, {})", n, lambda_name, generate_captures(chain.captures, &BTreeSet::new(), ictx))
 }
 
 
 fn generate_lambda<'i>(lambda: &Lambda<'i>, actx: &mut AssignmentContext<'i>, ictx: &mut ImplementationContext<'i>) -> String {
-    generate_implementations(&lambda.data.continuations, &lambda.data.result_literal, Some(lambda.argument), actx, ictx)
+    let mut sub_actx = AssignmentContext::new(actx.cur_assignment, Some(lambda.data.id));
+
+    let res = generate_implementation_chain(ImplementationChain {
+        arg_name: Some(lambda.argument),
+        continuations: &lambda.data.continuations,
+        result_literal: &lambda.data.result_literal,
+        captures: &lambda.data.captures
+    }, &mut sub_actx, ictx);
+
+    actx.impls.extend(sub_actx.impls);
+
+    res
 }
 
 
 fn generate_assignment(ass: &Assignment<'_>) -> String {
-    let mut actx = AssignmentContext::new(ass.target);
+    let mut actx = AssignmentContext::new(ass.target, None);
     let mut ictx = Default::default();
 
     let target = generate_identifier(ass.target);
@@ -388,7 +400,12 @@ fn generate_assignment(ass: &Assignment<'_>) -> String {
     let value = if ass.data.continuations.is_empty() {
         generate_literal(&ass.data.result_literal, &mut actx, &mut ictx)
     } else {
-        let lambda = generate_implementations(&ass.data.continuations, &ass.data.result_literal, None, &mut actx, &mut ictx);
+        let lambda = generate_implementation_chain(ImplementationChain {
+            arg_name: None,
+            continuations: &ass.data.continuations,
+            result_literal: &ass.data.result_literal,
+            captures: &BTreeSet::new()
+        }, &mut actx, &mut ictx);
 
         lambda + "->ret()"
     };
