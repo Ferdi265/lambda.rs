@@ -309,7 +309,9 @@ fn generate_implementation<'i>(imp: Implementation<'i, '_>, actx: &mut Assignmen
 
     for (capture, refcount) in ictx.global_references.into_iter() {
         if refcount > 0 {
-            res += &format!("    {}->ref({});\n", capture, refcount);
+            res += &format!("    {}->ref({});\n",
+                generate_identifier(capture), refcount
+            );
         }
 
         i += 1;
