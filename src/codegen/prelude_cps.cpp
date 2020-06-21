@@ -14,12 +14,13 @@ class Lambda {
     LambdaFn* function;
 
     template <size_t N>
-    Lambda(LambdaFn* f, std::array<Lambda*, N> cs) :
+    Lambda(LambdaFn* f, std::array<Lambda*, N> cs, size_t value) :
         refcount(1),
         function(f),
         length(N)
     {
         std::copy_n(cs.data(), N, captures);
+        data() = value;
     }
 
     static Lambda* nop_lambda(Lambda* arg, Lambda* self, Cont* cont);
@@ -44,6 +45,10 @@ public:
         }
     }
 
+    size_t& data() {
+        return (size_t&) captures[length];
+    }
+
     Lambda* call(Lambda* arg, Cont* cont) {
         return function(arg, this, cont);
     }
@@ -51,9 +56,9 @@ public:
     Lambda* ret(Lambda* arg = nullptr);
 
     template <size_t N>
-    static Lambda* mk(LambdaFn* f, std::array<Lambda*, N> captures) {
-        uint8_t * buf = new uint8_t[sizeof (Lambda) + N * sizeof (Lambda*)];
-        return new (buf) Lambda(f, captures);
+    static Lambda* mk(LambdaFn* f, std::array<Lambda*, N> captures, size_t value = 0) {
+        uint8_t * buf = new uint8_t[sizeof (Lambda) + (N + 1) * sizeof (Lambda*)];
+        return new (buf) Lambda(f, captures, value);
     }
 };
 
