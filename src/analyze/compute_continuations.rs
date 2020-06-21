@@ -116,9 +116,7 @@ fn transform_application_initial<'i, F>(app: &prev::Application<'i>, ctx: &mut C
     -> (Rc<Application<'i>>, Literal<'i>)
     where F: FnOnce(&mut Context<'i>, Literal<'i>) -> Literal<'i>
 {
-    let next = app.tail
-        .as_ref()
-        .map(|app| &**app);
+    let next = app.tail.as_deref();
 
     let (head, lit) = transform_expression(&app.head, ctx);
     let lit = f(ctx, lit);
