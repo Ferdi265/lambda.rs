@@ -1,14 +1,27 @@
+use std::fmt::Debug;
+use std::fmt::Formatter;
+use std::fmt::Result as FmtResult;
 use std::rc::Rc;
 use std::collections::BTreeSet;
 
 use crate::ast::generic;
 use super::compute_lambda_captures as prev;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum GenericLiteral<'i, D: generic::ASTData<'i>> {
     Anonymous(usize),
     Identifier(Identifier<'i>),
     Lambda(Rc<generic::Lambda<'i, D>>)
+}
+
+impl<'i, D: generic::ASTData<'i>> Debug for GenericLiteral<'i, D> {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        match self {
+            GenericLiteral::Anonymous(id) => write!(f, "[anon {}]", id),
+            GenericLiteral::Identifier(ident) => write!(f, "{}", ident),
+            GenericLiteral::Lambda(lambda) => write!(f, "[lambda {} -> ...]", lambda.argument)
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
