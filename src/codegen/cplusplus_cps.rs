@@ -1,6 +1,7 @@
 use std::collections::BTreeSet;
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry::Occupied;
+
 use super::*;
 
 static RESERVED_WORDS: [&str; 101] = [
@@ -112,13 +113,14 @@ static CODEGEN_PRELUDE: &str = include_str!("prelude_cps.cpp");
 #[derive(Debug, Clone, Copy)]
 pub struct CPlusPlusCPS;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ArgName<'i> {
     Unnamed,
     Anonymous(usize),
     Identifier(Identifier<'i>)
 }
 
+#[derive(Debug)]
 struct Implementation<'i, 'a> {
     id: usize,
     arg_name: ArgName<'i>,
@@ -151,14 +153,18 @@ impl<'i> AssignmentContext<'i> {
 
 #[derive(Debug, Clone, Default)]
 struct ImplementationContext<'i> {
+    arg_name: Option<ArgName<'i>>,
+    arg_references: usize,
     global_references: BTreeMap<Identifier<'i>, usize>,
     capture_references: BTreeMap<Identifier<'i>, usize>,
     anonymous_references: BTreeMap<usize, usize>,
 }
 
 impl<'i> ImplementationContext<'i> {
-    fn new(captures: &BTreeSet<Identifier<'i>>, anonymous_captures: &BTreeSet<usize>) -> Self {
+    fn new(arg_name: ArgName<'i>, captures: &BTreeSet<Identifier<'i>>, anonymous_captures: &BTreeSet<usize>) -> Self {
         ImplementationContext {
+            arg_name: Some(arg_name),
+            arg_references: 0,
             global_references: BTreeMap::new(),
             capture_references: captures.iter()
                 .cloned()
@@ -172,7 +178,9 @@ impl<'i> ImplementationContext<'i> {
     }
 
     fn reference_identifier(&mut self, ident: Identifier<'i>) {
-        if let Occupied(mut entry) = self.capture_references.entry(ident) {
+        if Some(ArgName::Identifier(ident)) == self.arg_name {
+            self.arg_references += 1;
+        } else if let Occupied(mut entry) = self.capture_references.entry(ident) {
             *entry.get_mut() += 1;
         } else {
             *self.global_references.entry(ident).or_insert(0) += 1;
@@ -180,7 +188,9 @@ impl<'i> ImplementationContext<'i> {
     }
 
     fn reference_anonymous(&mut self, anon: usize) {
-        if let Occupied(mut entry) = self.anonymous_references.entry(anon) {
+        if Some(ArgName::Anonymous(anon)) == self.arg_name {
+            self.arg_references += 1;
+        } else if let Occupied(mut entry) = self.anonymous_references.entry(anon) {
             *entry.get_mut() += 1;
         } else {
             panic!("uncaptured anonymous literal '{}' referenced!", anon);
@@ -261,7 +271,7 @@ fn generate_implementation<'i>(imp: Implementation<'i, '_>, actx: &mut Assignmen
         cont_name, arg_name
     );
 
-    let mut ictx = ImplementationContext::new(imp.captures, imp.anonymous_captures);
+    let mut ictx = ImplementationContext::new(imp.arg_name, imp.captures, imp.anonymous_captures);
 
     let next = imp.next.map(|next| generate_continuation(next, actx, &mut ictx));
     let func = imp.function.map(|lit| generate_literal(lit, actx, &mut ictx));
