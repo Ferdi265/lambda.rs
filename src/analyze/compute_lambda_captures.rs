@@ -165,7 +165,7 @@ fn transform_expression<'i>(expr: &prev::Expression<'i>, ctx: &mut Context<'i>) 
                 } else {
                     ctx.add_diagnostic("error", format!(
                         "undefined name '{}' in definition of '{}'",
-                        ctx.current_assignment, ident
+                        ident, ctx.current_assignment
                     ));
                 }
             }
