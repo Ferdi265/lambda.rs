@@ -50,6 +50,11 @@ tuple = a -> b -> sel -> sel a b
 2nd = tup -> tup false
 
 
+# chain multiple actions
+# never returns a value
+do = y do -> arg -> f -> do (f arg)
+
+
 # type list : ((first, empty), rest))
 # linked-list container type built from tuples
 
@@ -139,3 +144,98 @@ bubble_sort = y bubble_sort -> list ->
         (x -> list)
         (x -> bubble_sort (bubble_iter list))
     ident)
+
+
+# convenience number literals
+0 = zero
+1 = succ 0
+2 = succ 1
+3 = succ 2
+4 = succ 3
+5 = succ 4
+6 = succ 5
+7 = succ 6
+8 = succ 7
+9 = succ 8
+10 = succ 9
+
+# I/O
+# interaction with the outside world happens solely by passed-in lambdas
+# that have side effects
+
+# the 'standard' set of simple I/O facilities is passed as a list of lambdas
+# each (exept the first) taking a single argument and returning a single value
+#
+# [IOzero, IOsucc, IOpred, IOiszero, IOgetchar, IOputchar]
+
+# the IO integer zero
+IOzero = IO -> first IO
+
+# increments the passed IO integer
+IOsucc = IO -> first (rest IO)
+
+# decrements the passed IO integer
+IOpred = IO -> first (rest (rest IO))
+
+# checks if the passed IO integer is zero
+# returns a boolean function (a -> b -> ?)
+IOiszero = IO -> first (rest (rest (rest IO)))
+
+# reads a character of input
+# ignores its argument
+# returns the character + 1 as an IO integer on success
+# returns 0 as an IO integer on error or EOF
+IOgetchar = IO -> first (rest (rest (rest (rest IO))))
+
+# writes a character of output
+# writes the passed IO integer - 1 to the output
+# returns an identity function
+IOputchar = IO -> first (rest (rest (rest (rest (rest IO)))))
+
+
+# IO integer to nat conversion functions
+IO2nat = IO -> n -> until2 (IOiszero IO) (IOpred IO) succ n zero
+nat2IO = IO -> n -> until2 iszero pred (IOsucc IO) n (IOzero IO)
+
+# IO character to nat conversion functions
+isEOF = IO -> c -> iszero (IO2nat IO c)
+IOC2nat = IO -> c -> pred (IO2nat IO c)
+nat2IOC = IO -> c -> nat2IO IO (succ c)
+
+# printing function
+puts = IO -> s -> map (c -> IOputchar IO (nat2IOC IO c)) s
+
+
+dec2 = a -> b -> (add (mul a 10) b)
+dec3 = a -> b -> c -> (add (mul (dec2 a b) 10) c)
+
+main = IO -> (do ident
+    (x -> puts IO
+        (prepend (dec2 7 2)
+        (prepend (dec3 1 0 1)
+        (prepend (dec3 1 0 8)
+        (prepend (dec3 1 0 8)
+        (prepend (dec3 1 1 1)
+        (prepend (dec2 1 0)
+            nil))))))
+    )
+    (x -> puts IO
+        (prepend (dec2 8 7)
+        (prepend (dec3 1 1 1)
+        (prepend (dec3 1 1 4)
+        (prepend (dec3 1 0 8)
+        (prepend (dec3 1 0 0)
+        (prepend (dec2 1 0)
+            nil))))))
+    )
+)
+
+start = IOzero -> IOsucc -> IOpred -> IOiszero -> IOgetchar -> IOputchar -> main (
+    prepend IOzero (
+    prepend IOsucc (
+    prepend IOpred (
+    prepend IOiszero (
+    prepend IOgetchar (
+    prepend IOputchar (
+        nil))))))
+)
