@@ -4,7 +4,7 @@ use std::collections::btree_map::Entry::Occupied;
 
 use super::*;
 
-static RESERVED_WORDS: [&str; 100] = [
+static RESERVED_WORDS: [&str; 101] = [
     "alignas",
     "alignof",
     "and",
@@ -100,6 +100,7 @@ static RESERVED_WORDS: [&str; 100] = [
     "while",
     "xor",
     "xor_eq ",
+    "main",
     "Lambda",
     "Cont",
     "LambdaFn",
